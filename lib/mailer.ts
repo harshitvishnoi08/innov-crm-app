@@ -117,7 +117,7 @@ export async function sendNewLeadNotification(lead: NewLeadData) {
     await transporter.sendMail({
       from: `"Innov CRM" <${process.env.SMTP_FROM}>`,
       to: recipients.join(", "),
-      subject: `🆕 New Lead: ${lead.customerName} — ${lead.platform || lead.leadSource || "CRM"}`,
+      subject: `🆕 New Lead Notifications — Innov CRM`,
       text: `New lead received: ${lead.customerName} | ${lead.contactNumber} | ${lead.city || ""} | ${lead.platform || ""}\n\nView: ${leadUrl}`,
       html,
     });

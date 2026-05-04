@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendNewLeadNotification } from "@/lib/mailer";
+import { sendWhatsAppTemplate, normalizePhone } from "@/lib/whatsapp";
 
 const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN;
 
@@ -98,6 +99,33 @@ export async function POST(req: NextRequest) {
                 status: newLead.status,
                 assignedUser: null,
               });
+
+              // Auto-send WhatsApp welcome template if phone exists and template is configured
+              const autoTemplate = process.env.WHATSAPP_AUTO_TEMPLATE;
+              if (newLead.contactNumber && autoTemplate) {
+                void (async () => {
+                  try {
+                    const apiRes = await sendWhatsAppTemplate(newLead.contactNumber, autoTemplate);
+                    if (!apiRes.error) {
+                      await prisma.whatsAppMessage.create({
+                        data: {
+                          leadId: newLead.id,
+                          wamid: apiRes.messages?.[0]?.id ?? null,
+                          fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
+                          toNumber: normalizePhone(newLead.contactNumber),
+                          direction: 'outbound',
+                          messageType: 'template',
+                          templateName: autoTemplate,
+                          status: 'sent',
+                          sentAt: new Date(),
+                        },
+                      });
+                    }
+                  } catch (e) {
+                    console.error('Auto WhatsApp template send failed:', e);
+                  }
+                })();
+              }
             }
           }
         }

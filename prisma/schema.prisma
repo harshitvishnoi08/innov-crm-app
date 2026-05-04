@@ -43,19 +43,20 @@ model User {
   emailVerified    Boolean? @default(false)
   password         String?
   rolePermissionId String   @db.Uuid
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime @default(now()) @db.Timestamptz
+  updatedAt        DateTime @updatedAt @db.Timestamptz
 
-  rolePermission RolePermission  @relation(fields: [rolePermissionId], references: [id])
-  accounts       Account[]
-  chats          Chat[]
-  sessions       Session[]
-  leads          Lead[]
-  leadActivities LeadActivity[]
-  assignedLeads  Lead[]          @relation("AssignedLeads")
-  teamLeads      LeadTeamMember[]
-  meetings       Meeting[]
-  comments       Comment[]
+  rolePermission   RolePermission    @relation(fields: [rolePermissionId], references: [id])
+  accounts         Account[]
+  chats            Chat[]
+  sessions         Session[]
+  leads            Lead[]
+  leadActivities   LeadActivity[]
+  assignedLeads    Lead[]            @relation("AssignedLeads")
+  teamLeads        LeadTeamMember[]
+  meetings         Meeting[]
+  comments         Comment[]
+  whatsappMessages WhatsAppMessage[]
 
   @@index([email])
   @@map("users")
@@ -68,13 +69,13 @@ model Account {
   providerId            String
   accessToken           String?
   refreshToken          String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz
+  refreshTokenExpiresAt DateTime? @db.Timestamptz
   scope                 String?
   idToken               String?
   password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt             DateTime  @default(now()) @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -86,11 +87,11 @@ model Session {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @db.Uuid
   token     String   @unique
-  expiresAt DateTime
+  expiresAt DateTime @db.Timestamptz
   ipAddress String?
   userAgent String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -103,9 +104,9 @@ model Verification {
   id         String   @id @default(uuid()) @db.Uuid
   identifier String
   value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  expiresAt  DateTime @db.Timestamptz
+  createdAt  DateTime @default(now()) @db.Timestamptz
+  updatedAt  DateTime @updatedAt @db.Timestamptz
 
   @@index([identifier])
   @@map("verifications")
@@ -115,8 +116,8 @@ model RolePermission {
   id          String   @id @default(uuid()) @db.Uuid
   role        UserRole
   permissions String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
 
   users User[]
 
@@ -124,41 +125,42 @@ model RolePermission {
 }
 
 model Lead {
-  id               String          @id @default(cuid())
-  customerName     String
-  contactNumber    String
-  alternateContact String?
-  email            String?
-  state            String?
-  city             String?
-  platform         String
-  leadSource       String?         @default("Meta Ads")
-  status           LeadStatus      @default(NEW)
-  temperature      LeadTemperature?
-  activeStatus     ActiveStatus    @default(ACTIVE)
-  assignedTo       String?         @db.Uuid
-  leadCreatedDate  DateTime
-  followUpDate     DateTime?
-  propertyType     String?
-  serviceRequired  String?
-  briefScope       String?         @db.Text
-  budgetRange      String?
-  propertySize     String?
-  requirement      String?         @db.Text
-  initialNotes     String?         @db.Text
+  id                String           @id @default(cuid())
+  customerName      String
+  contactNumber     String
+  alternateContact  String?
+  email             String?
+  state             String?
+  city              String?
+  platform          String
+  leadSource        String?          @default("Meta Ads")
+  status            LeadStatus       @default(NEW)
+  temperature       LeadTemperature?
+  activeStatus      ActiveStatus     @default(ACTIVE)
+  assignedTo        String?          @db.Uuid
+  leadCreatedDate   DateTime         @db.Timestamptz
+  followUpDate      DateTime?        @db.Timestamptz
+  propertyType      String?
+  serviceRequired   String?
+  briefScope        String?          @db.Text
+  budgetRange       String?
+  propertySize      String?
+  requirement       String?          @db.Text
+  initialNotes      String?          @db.Text
   preferredCallTime String?
-  visitChargeQuoted Decimal?       @db.Decimal(10, 2)
-  visitTokenAmount  Decimal?       @db.Decimal(10, 2)
-  userId           String?         @db.Uuid
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  visitChargeQuoted Decimal?         @db.Decimal(10, 2)
+  visitTokenAmount  Decimal?         @db.Decimal(10, 2)
+  userId            String?          @db.Uuid
+  createdAt         DateTime         @default(now()) @db.Timestamptz
+  updatedAt         DateTime         @updatedAt @db.Timestamptz
 
-  user           User?            @relation(fields: [userId], references: [id])
-  assignedUser   User?            @relation("AssignedLeads", fields: [assignedTo], references: [id])
-  activities     LeadActivity[]
-  teamMembers    LeadTeamMember[]
-  meetings       Meeting[]
-  comments       Comment[]
+  user              User?              @relation(fields: [userId], references: [id])
+  assignedUser      User?              @relation("AssignedLeads", fields: [assignedTo], references: [id])
+  activities        LeadActivity[]
+  teamMembers       LeadTeamMember[]
+  meetings          Meeting[]
+  comments          Comment[]
+  whatsappMessages  WhatsAppMessage[]
 
   @@index([status])
   @@index([userId])
@@ -170,7 +172,7 @@ model LeadTeamMember {
   id        String   @id @default(uuid()) @db.Uuid
   leadId    String
   userId    String   @db.Uuid
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -184,11 +186,11 @@ model Meeting {
   leadId      String
   userId      String?  @db.Uuid
   agenda      String
-  meetingDate DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  meetingDate DateTime @db.Timestamptz
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
 
-  reminderSent Boolean  @default(false)
+  reminderSent Boolean @default(false)
 
   lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id])
@@ -203,7 +205,7 @@ model Comment {
   userId    String?  @db.Uuid
   content   String
   type      String   @default("note")
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id])
@@ -217,8 +219,8 @@ model Chat {
   userId    String   @db.Uuid
   title     String   @default("New Chat")
   isPublic  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   chatMessages ChatMessage[]
@@ -234,8 +236,8 @@ model ChatMessage {
   role        String
   parts       Json?
   attachments Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
@@ -247,11 +249,11 @@ model ChatMessage {
 model LeadActivity {
   id           String   @id @default(cuid())
   leadId       String
-  activityDate DateTime
+  activityDate DateTime @db.Timestamptz
   activityType String
   note         String?  @db.Text
   userId       String?  @db.Uuid
-  createdAt    DateTime @default(now())
+  createdAt    DateTime @default(now()) @db.Timestamptz
 
   lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id])
@@ -259,4 +261,37 @@ model LeadActivity {
   @@index([leadId])
   @@index([activityDate])
   @@map("lead_activities")
+}
+
+model WhatsAppMessage {
+  id            String    @id @default(cuid())
+  leadId        String
+  wamid         String?   @unique
+  fromNumber    String
+  toNumber      String
+  direction     String    // "inbound" | "outbound"
+  messageType   String    @default("text")
+  messageBody   String?   @db.Text
+  mediaUrl      String?
+  mediaMimeType String?
+  templateName  String?
+  isReply       Boolean   @default(false)
+  replyToWamid  String?
+  buttonText    String?
+  status        String    @default("sent") // accepted | sent | delivered | read | failed
+  sentAt        DateTime? @db.Timestamptz
+  deliveredAt   DateTime? @db.Timestamptz
+  readAt        DateTime? @db.Timestamptz
+  failedAt      DateTime? @db.Timestamptz
+  failureReason String?
+  sentBy        String?   @db.Uuid
+  createdAt     DateTime  @default(now()) @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @db.Timestamptz
+
+  lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [sentBy], references: [id])
+
+  @@index([leadId])
+  @@index([wamid])
+  @@map("whatsapp_messages")
 }

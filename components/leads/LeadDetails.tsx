@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Send, Calendar, X, UserPlus, Trash2, Phone, Pencil } from 'lucide-react';
+import { ArrowLeft, Send, Calendar, X, UserPlus, Trash2, Phone, Pencil, MessageCircle } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 import { toast } from 'sonner';
+import { WhatsAppChat } from '@/components/leads/WhatsAppChat';
 
 function formatDate(value: string | null | undefined) {
   if (!value) return '—';
@@ -50,6 +51,7 @@ export function LeadDetail({ id }: { id: string }) {
   const updateMeetingMut = useUpdateMeeting(id);
   const deleteMeetingMut = useDeleteMeeting(id);
 
+  const [rightTab, setRightTab] = useState<'activity' | 'whatsapp'>('activity');
   const [comment, setComment] = useState('');
   const [confirmCall, setConfirmCall] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -502,50 +504,89 @@ export function LeadDetail({ id }: { id: string }) {
 
         <div className="flex flex-col" style={{ height: 'min(600px, 80vh)' }}>
           <Card className="flex flex-col h-full">
-            <CardHeader className="pb-2 border-b flex-shrink-0">
-              <CardTitle className="text-sm">Comments & Activity</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
-              {comments.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center mt-8">
-                  No comments yet. Add the first one!
-                </p>
-              )}
-              {[...comments].reverse().map((c) => {
-                const user = c.user as Record<string, string> | null;
-                return (
-                  <div key={c.id as string} className="flex flex-col gap-1 items-start">
-                    <div className="rounded-2xl rounded-tl-sm bg-muted/60 px-3 py-2 max-w-[85%]">
-                      <p className="text-sm leading-relaxed">{c.content as string}</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground px-1">
-                      {user?.name || 'System'} · {formatDateTime(c.createdAt as string)}
-                    </p>
-                  </div>
-                );
-              })}
-            </CardContent>
-            <div className="p-3 border-t flex gap-2 flex-shrink-0">
-              <Input
-                placeholder="Add a comment..."
-                value={comment}
-                onChange={e => setComment(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    void handleSendComment();
-                  }
-                }}
-                className="flex-1"
-              />
-              <Button
-                size="sm"
-                onClick={() => void handleSendComment()}
-                disabled={addComment.isPending || !comment.trim()}
+            {/* Tab switcher */}
+            <div className="flex border-b flex-shrink-0">
+              <button
+                onClick={() => setRightTab('activity')}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors flex-1 justify-center ${
+                  rightTab === 'activity'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
               >
-                <Send className="h-4 w-4" />
-              </Button>
+                <MessageCircle className="h-3.5 w-3.5" />
+                Activity & Notes
+              </button>
+              <button
+                onClick={() => setRightTab('whatsapp')}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors flex-1 justify-center ${
+                  rightTab === 'whatsapp'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <WhatsAppIcon className="h-3.5 w-3.5" />
+                WhatsApp
+              </button>
             </div>
+
+            {/* Activity & Notes tab */}
+            {rightTab === 'activity' && (
+              <>
+                <CardContent className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+                  {comments.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center mt-8">
+                      No comments yet. Add the first one!
+                    </p>
+                  )}
+                  {[...comments].reverse().map((c) => {
+                    const user = c.user as Record<string, string> | null;
+                    return (
+                      <div key={c.id as string} className="flex flex-col gap-1 items-start">
+                        <div className="rounded-2xl rounded-tl-sm bg-muted/60 px-3 py-2 max-w-[85%]">
+                          <p className="text-sm leading-relaxed">{c.content as string}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground px-1">
+                          {user?.name || 'System'} · {formatDateTime(c.createdAt as string)}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+                <div className="p-3 border-t flex gap-2 flex-shrink-0">
+                  <Input
+                    placeholder="Add a comment..."
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        void handleSendComment();
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => void handleSendComment()}
+                    disabled={addComment.isPending || !comment.trim()}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* WhatsApp tab */}
+            {rightTab === 'whatsapp' && (
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <WhatsAppChat
+                  leadId={id}
+                  contactNumber={lead.contactNumber as string | null}
+                  customerName={lead.customerName as string}
+                />
+              </div>
+            )}
           </Card>
         </div>
       </div>
