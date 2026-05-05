@@ -88,7 +88,7 @@ export function WhatsAppChat({ leadId, contactNumber, customerName }: WhatsAppCh
     if (!isLoading && messages.length > 0) {
       bottomRef.current?.scrollIntoView({ behavior: 'instant' });
     }
-  }, [isLoading]);
+  }, [isLoading, messages.length]);
 
   const handleSend = async () => {
     const text = input.trim();
