@@ -779,7 +779,7 @@ export function LeadsTable() {
                               value={((lead.assignedUser as Record<string, string> | null)?.id) || '__none__'}
                               onValueChange={v => handleInlineUpdate(lead.id as string, 'assignedTo', v === '__none__' ? '' : v)}
                             >
-                              <SelectTrigger className="h-7 w-full border-0 bg-transparent p-0 text-xs focus:ring-0">
+                              <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
                                 <SelectValue placeholder="Unassigned" />
                               </SelectTrigger>
                               <SelectContent>
@@ -801,7 +801,7 @@ export function LeadsTable() {
                             value={(lead.status as string) || ''}
                             onValueChange={v => handleInlineUpdate(lead.id as string, 'status', v)}
                           >
-                            <SelectTrigger className="h-7 w-full border-0 bg-transparent p-0 text-xs focus:ring-0">
+                            <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
                               <SelectValue placeholder="—" />
                             </SelectTrigger>
                             <SelectContent>
@@ -815,7 +815,7 @@ export function LeadsTable() {
                             value={(lead.temperature as string) || ''}
                             onValueChange={v => handleInlineUpdate(lead.id as string, 'temperature', v)}
                           >
-                            <SelectTrigger className="h-7 w-full border-0 bg-transparent p-0 text-xs focus:ring-0">
+                            <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
                               <SelectValue placeholder="—" />
                             </SelectTrigger>
                             <SelectContent>
@@ -852,7 +852,7 @@ export function LeadsTable() {
                             value={(lead.activeStatus as string) || ''}
                             onValueChange={v => handleInlineUpdate(lead.id as string, 'activeStatus', v)}
                           >
-                            <SelectTrigger className="h-7 w-full border-0 bg-transparent p-0 text-xs focus:ring-0">
+                            <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
                               <SelectValue placeholder="—" />
                             </SelectTrigger>
                             <SelectContent>
