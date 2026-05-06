@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, Users, Settings, UserCheck, Calendar } from "lucide-react";
+import { LayoutDashboard, Users, Settings, UserCheck, Calendar, MessageCircle } from "lucide-react";
 
 export type NavSubItem = {
   title: string;
@@ -40,6 +40,11 @@ export function getCurrentAppConfig(user: unknown) {
         title: "Users",
         url: "/users",
         icon: Users,
+      },
+      {
+        title: "WhatsApp",
+        url: "/whatsapp",
+        icon: MessageCircle,
       },
       {
         title: "Settings",

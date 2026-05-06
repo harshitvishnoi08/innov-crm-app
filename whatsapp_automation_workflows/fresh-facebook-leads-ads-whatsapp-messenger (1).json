@@ -1,0 +1,1322 @@
+{
+  "name": "fresh-facebook-leads-ads-whatsapp-messenger",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1tipAOCcyAOjbOAMPNH9ZsdWkwZXwWHO4gOw_toFV6WU",
+          "mode": "list",
+          "cachedResultName": "facebook-leads-data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tipAOCcyAOjbOAMPNH9ZsdWkwZXwWHO4gOw_toFV6WU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tipAOCcyAOjbOAMPNH9ZsdWkwZXwWHO4gOw_toFV6WU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "form_name": "={{ $json.form.name }}",
+            "form_id": "={{ $json.form.id }}",
+            "customer's requirement ": "={{ $json.data['you_are_looking_for_?_'] }}",
+            "customer's_property_type": "={{ $json.data.your_property_type_ }}",
+            "customer's_expected_budget": "={{ $json.data.your_expected_budget_ }}",
+            "planning_duration_by_customer": "={{ $json.data.when_are_you_planning_to_construct_ }}",
+            "customer_preffered_time_to_call": "={{ $json.data['preferred_time_to_call_you?_'] }}",
+            "appx_size_of_property": "={{ $json.data['approximate_size_of_your_property?'] }}",
+            "customer_name": "={{ $json.data.full_name }}",
+            "customer_phone_number": "={{ $json.data.phone_number }}",
+            "customer_city": "={{ $json.data.city }}",
+            "page_name": "={{ $json.page.name }}",
+            "page_id": "={{ $json.page.id }}"
+          },
+          "matchingColumns": [
+            "customer_phone_number"
+          ],
+          "schema": [
+            {
+              "id": "form_name",
+              "displayName": "form_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "form_id",
+              "displayName": "form_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer's requirement ",
+              "displayName": "customer's requirement ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer's_property_type",
+              "displayName": "customer's_property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer's_expected_budget",
+              "displayName": "customer's_expected_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "planning_duration_by_customer",
+              "displayName": "planning_duration_by_customer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_preffered_time_to_call",
+              "displayName": "customer_preffered_time_to_call",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "appx_size_of_property",
+              "displayName": "appx_size_of_property",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_phone_number",
+              "displayName": "customer_phone_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_city",
+              "displayName": "customer_city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "page_name",
+              "displayName": "page_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "page_id",
+              "displayName": "page_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "whatsapp_message_status",
+              "displayName": "whatsapp_message_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1488,
+        320
+      ],
+      "id": "1840a528-f874-4af2-816d-f2bd455f3157",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6mqis9ZMtoqOOOKv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9ade0f35-7b81-4d0e-9e95-f20706c7f76b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/<PHONE_NUMBER_ID>/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAROU3e1CLUBQnxhjH2dWi71m5tdHP9CKFUY2UA3n7a2tjQn2tOG34KjZCalZBCgIAYHBN3IYoumWHgJJm3vBTPebWKXlLSkEZAMc3w107jIEwUZB8aCXQmHZB0Aiq0IvxAt7dgnZAtZCguCNryLi4M1dmN1d6nyZAAjkTJZCZAf9pwEpPxZAhrZBoAI41cq0ZAiIxnGSGQZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messaging_product",
+              "value": "whatsapp"
+            },
+            {
+              "name": "to",
+              "value": "919810209556"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2464,
+        1568
+      ],
+      "id": "a4b121f1-b27b-429e-a80f-4d325a7ccbe4",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "+918178295081",
+        "template": "banquet_ads_|en",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "Harshit Vishnoi"
+                  },
+                  {
+                    "text": "Resort"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "header",
+              "headerParameters": {
+                "parameter": [
+                  {
+                    "type": "image",
+                    "imageLink": "https://weinnovarch.com/images/bliss.jpeg"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "button",
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Starting Soon"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 1,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Need Consultation"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 2,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Not Now"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        816
+      ],
+      "id": "3e5e42e7-44da-4b7e-b4fb-292347e105cf",
+      "name": "Send message and wait for response",
+      "webhookId": "b2521550-615d-438c-9502-41d47429905a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "+918178295081",
+        "template": "intro_message|en",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "Harshit Vishnoi"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        1056
+      ],
+      "id": "c732f449-a3b6-4786-a3a6-46707d9bae0c",
+      "name": "Send message and wait for response1",
+      "webhookId": "b2521550-615d-438c-9502-41d47429905a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "={{ $json.phone }}",
+        "template": "intro_message_v3|en",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "=Dear {{ $json.name }} Ji"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        320
+      ],
+      "id": "608649e2-07bd-4ddf-8b39-e0512eb8eadd",
+      "name": "Send message and wait for response2",
+      "webhookId": "b2521550-615d-438c-9502-41d47429905a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Normalize Indian Phone Number Format (91XXXXXXXXXX)\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  \n  let phone = item.json.customer_phone_number;\n\n  if (!phone) {\n    results.push(item);\n    continue;\n  }\n\n  // 1️⃣ Remove all non-numeric characters (+, spaces, etc.)\n  phone = phone.replace(/\\D/g, \"\");\n\n  // 2️⃣ If number starts with 91 and length is 12 → keep it\n  if (phone.startsWith(\"91\") && phone.length === 12) {\n    item.json.customer_phone_number = phone;\n  }\n\n  // 3️⃣ If number is 10 digits → add 91 prefix\n  else if (phone.length === 10) {\n    item.json.customer_phone_number = \"91\" + phone;\n  }\n\n  // 4️⃣ If number starts with 91 but length is more than 12 → fix it\n  else if (phone.startsWith(\"91\") && phone.length > 12) {\n    // Keep last 10 digits and add 91\n    const last10 = phone.slice(-10);\n    item.json.customer_phone_number = \"91\" + last10;\n  }\n\n  // 5️⃣ If invalid → mark as invalid\n  else {\n    item.json.phone_validation_error = \"Invalid phone number format\";\n  }\n\n  results.push(item);\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1280,
+        320
+      ],
+      "id": "f4025f4d-a4fe-43e3-8959-50030466ef46",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "wamid",
+              "fieldValue": "={{ $json.messages[0].id }}"
+            },
+            {
+              "fieldId": "from_number",
+              "fieldValue": "917011219741"
+            },
+            {
+              "fieldId": "to_number",
+              "fieldValue": "={{ $('Code in JavaScript1').item.json.customer_phone_number }}"
+            },
+            {
+              "fieldId": "direction",
+              "fieldValue": "=outbound"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "message_body",
+              "fieldValue": "=Hi dear {{ $('Append or update row in sheet').item.json.customer_name }} Ji 😊\nThanks for submitting your project details.\n\nI just had a look at it.\nLet’s connect once and discuss it properly — it’ll be easier on call.\nShall we connect at your preferred time to discuss further?"
+            },
+            {
+              "fieldId": "sent_at",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "is_reply",
+              "fieldValue": "=false"
+            },
+            {
+              "fieldId": "template_name",
+              "fieldValue": "intro_message"
+            },
+            {
+              "fieldId": "is_billable",
+              "fieldValue": "true"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "sent"
+            },
+            {
+              "fieldId": "contact_id",
+              "fieldValue": "={{ $('upsert into contacts').first().json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        320
+      ],
+      "id": "6b751f77-d21f-41f9-865c-946381b1584d",
+      "name": "Create a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HSWWgMoeUxcppRaV",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1tipAOCcyAOjbOAMPNH9ZsdWkwZXwWHO4gOw_toFV6WU",
+          "mode": "list",
+          "cachedResultName": "facebook-leads-data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tipAOCcyAOjbOAMPNH9ZsdWkwZXwWHO4gOw_toFV6WU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tipAOCcyAOjbOAMPNH9ZsdWkwZXwWHO4gOw_toFV6WU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "whatsapp_message_status": "sent",
+            "customer_name": "={{ $('Append or update row in sheet').item.json.customer_name }}"
+          },
+          "matchingColumns": [
+            "customer_name"
+          ],
+          "schema": [
+            {
+              "id": "form_name",
+              "displayName": "form_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "form_id",
+              "displayName": "form_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer's requirement ",
+              "displayName": "customer's requirement ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer's_property_type",
+              "displayName": "customer's_property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer's_expected_budget",
+              "displayName": "customer's_expected_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "planning_duration_by_customer",
+              "displayName": "planning_duration_by_customer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer_preffered_time_to_call",
+              "displayName": "customer_preffered_time_to_call",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "appx_size_of_property",
+              "displayName": "appx_size_of_property",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_phone_number",
+              "displayName": "customer_phone_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer_city",
+              "displayName": "customer_city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "page_name",
+              "displayName": "page_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "page_id",
+              "displayName": "page_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "whatsapp_message_status",
+              "displayName": "whatsapp_message_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -176,
+        320
+      ],
+      "id": "c7d951b9-4c9f-4afb-aca4-251d413eb94b",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6mqis9ZMtoqOOOKv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "contacts",
+          "mode": "list",
+          "cachedResultName": "contacts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $json.customer_phone_number }}",
+            "name": "={{ $json.customer_name }}",
+            "is_active": true,
+            "source": "facebook_lead_ad"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "tags",
+              "displayName": "tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "last_message_at",
+              "displayName": "last_message_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "last_message_preview",
+              "displayName": "last_message_preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "total_messages_in",
+              "displayName": "total_messages_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "total_messages_out",
+              "displayName": "total_messages_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1040,
+        320
+      ],
+      "id": "f045ed32-eccb-4650-bb17-bf00c3654c1c",
+      "name": "upsert into contacts",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "leads",
+          "mode": "list",
+          "cachedResultName": "leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "template_sent": true,
+            "phone": "={{ $json.phone }}",
+            "name": "={{ $json.name }}",
+            "project_type": "={{ $('Code in JavaScript1').item.json['customer\\'s requirement '] }}",
+            "lead_source": "={{ $('Code in JavaScript1').item.json.form_name }}",
+            "lead_status": "NEW",
+            "template_sent_at": "={{ $now }}",
+            "contact_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "project_type",
+              "displayName": "project_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "lead_source",
+              "displayName": "lead_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "template_sent",
+              "displayName": "template_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "template_sent_at",
+              "displayName": "template_sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "last_contacted_at",
+              "displayName": "last_contacted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "next_followup_at",
+              "displayName": "next_followup_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "followup_count",
+              "displayName": "followup_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "contact_id",
+              "displayName": "contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -832,
+        320
+      ],
+      "id": "a073aafe-daf6-4566-a6e6-33868c963f2e",
+      "name": "leads upsert",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1968,
+        544
+      ],
+      "id": "20d7ac03-b244-4968-9545-9fb90a397efc",
+      "name": "Wait",
+      "webhookId": "68af461d-dfd3-4fda-b80e-da5826ecb287"
+    },
+    {
+      "parameters": {
+        "page": {
+          "__rl": true,
+          "value": "108781347300097",
+          "mode": "list",
+          "cachedResultName": "Innov Interiors & Architects",
+          "cachedResultUrl": "https://facebook.com/108781347300097"
+        },
+        "form": {
+          "__rl": true,
+          "value": "924850526698123",
+          "mode": "list",
+          "cachedResultName": "Bliss Glass House ads 18 fev -2026 lead  add on more budget"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.facebookLeadAdsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        544
+      ],
+      "id": "48118064-1d9f-431a-9b29-8ca9cb6e6013",
+      "name": "Facebook Lead Ads Trigger",
+      "webhookId": "4f045f7c-9f18-4918-97db-c8053fae51f2",
+      "credentials": {
+        "facebookLeadAdsOAuth2Api": {
+          "id": "JxAwdVi0x69mFVRQ",
+          "name": "Facebook Lead Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "=919540369156",
+        "template": "banquet_ads_|en",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "=Anubhav Jha"
+                  },
+                  {
+                    "text": "=xyz"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "header",
+              "headerParameters": {
+                "parameter": [
+                  {
+                    "type": "image",
+                    "imageLink": "https://weinnovarch.com/images/hero-mobile.jpeg"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "button",
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Starting Soon"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 1,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Need Consultation"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 2,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Not Now"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        784
+      ],
+      "id": "2b735df0-3988-4231-850b-f62ee0d7e0d1",
+      "name": "Send message and wait for response3",
+      "webhookId": "b2521550-615d-438c-9502-41d47429905a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Facebook Lead Ads Trigger": [
+      {
+        "json": {
+          "id": "2088502951943006",
+          "data": {
+            "you_are_looking_for_?_": "designing_+_construction",
+            "your_property_type_": "resort_/_farm_house_",
+            "your_expected_budget_": "50_lakh_-_1_crore_",
+            "when_are_you_planning_to_construct_": "within_3_month_",
+            "preferred_time_to_call_you?_": "evening__(3_pm_to_7_pm)",
+            "approximate_size_of_your_property?": "Pur",
+            "full_name": "Rohit",
+            "phone_number": "+919205015191",
+            "city": "New delhi"
+          },
+          "form": {
+            "id": "924850526698123",
+            "name": "Bliss Glass House ads 18 fev -2026 lead  add on more budget",
+            "locale": "en_US",
+            "status": "ACTIVE"
+          },
+          "ad": {
+            "id": "120239855298310682",
+            "name": "ads videos only"
+          },
+          "adset": {
+            "id": "120239855298320682",
+            "name": "new ads 05-02-2026 new audience"
+          },
+          "page": {
+            "name": "Innov Interiors & Architects",
+            "id": "108781347300097"
+          },
+          "created_time": "2026-03-04T18:21:22+0000"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "upsert into contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response2": {
+      "main": [
+        [
+          {
+            "node": "Create a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row3": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upsert into contacts": {
+      "main": [
+        [
+          {
+            "node": "leads upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "leads upsert": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Lead Ads Trigger": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "534ed093-f81c-4640-9051-e940d615b3db",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "507a669a968cdb9724b0d83b289010a62a52df6200495e962b06d2f1d47c342e"
+  },
+  "id": "VBvZP4Y7kdQmbNM7",
+  "tags": []
+}

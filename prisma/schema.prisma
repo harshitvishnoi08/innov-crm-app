@@ -263,6 +263,20 @@ model LeadActivity {
   @@map("lead_activities")
 }
 
+model WhatsAppTemplateRule {
+  id           String   @id @default(cuid())
+  name         String
+  formKeyword  String
+  templateName String
+  language     String   @default("en")
+  videoId      String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now()) @db.Timestamptz
+  updatedAt    DateTime @updatedAt @db.Timestamptz
+
+  @@map("whatsapp_template_rules")
+}
+
 model WhatsAppMessage {
   id            String    @id @default(cuid())
   leadId        String

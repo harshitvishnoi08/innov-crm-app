@@ -1,0 +1,3046 @@
+{
+  "name": "handling-status-updates&replies",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "whatsapppp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        656,
+        144
+      ],
+      "id": "f9283d21-e3e0-4ab3-85bc-988bb4367f57",
+      "name": "Webhook",
+      "webhookId": "550b0704-a03f-4fab-9638-2caf9295732d"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1424,
+        -800
+      ],
+      "id": "308f90d2-a4dd-4062-8d62-e99297fc6267",
+      "name": "Respond to Webhook",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "34d15c0c-fa93-4c84-9d34-dae7b8b88015",
+              "leftValue": "={{ $json.query['hub.verify_token'] }}",
+              "rightValue": "Harshit@1234483292",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1008,
+        -800
+      ],
+      "id": "be838f5c-2666-49fd-8163-8b5e4adcfe70",
+      "name": "If",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=forbidden",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1312,
+        -656
+      ],
+      "id": "6587e2d7-c976-4509-bb1c-f3e23211778c",
+      "name": "Respond to Webhook1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v24.0/757676046966708/subscribed_apps",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAROU3e1CLUBQnxhjH2dWi71m5tdHP9CKFUY2UA3n7a2tjQn2tOG34KjZCalZBCgIAYHBN3IYoumWHgJJm3vBTPebWKXlLSkEZAMc3w107jIEwUZB8aCXQmHZB0Aiq0IvxAt7dgnZAtZCguCNryLi4M1dmN1d6nyZAAjkTJZCZAf9pwEpPxZAhrZBoAI41cq0ZAiIxnGSGQZDZD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "override_callback_uri",
+              "value": "https://n8n.weinnovarch.com/webhook/whatsapp"
+            },
+            {
+              "name": "verify_token",
+              "value": "Harshit@1234483292"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        752,
+        -496
+      ],
+      "id": "baa48cea-ba96-4bf4-bce5-6061c4227530",
+      "name": "HTTP Request",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "={{ $json.from_number }}",
+        "textBody": "No worries at all! Whenever you're ready to start your project, feel free to reach out. We'd love to help. 😊",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2880,
+        64
+      ],
+      "id": "5f875aaf-6c14-4f7b-b4f6-2e32ce24498e",
+      "name": "Send message",
+      "webhookId": "76c74ce8-0e9f-42bd-9092-ffc3299a43f8",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.entry[0].changes[0].value.statuses }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "701aebb4-5e00-4e85-96c5-b52fb049e8dc"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Status Update"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "35e78319-01f1-4956-b486-48a2650401c6",
+                    "leftValue": "={{ $json.body.entry[0].changes[0].value.messages }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Incoming Message"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        144
+      ],
+      "id": "f1942a79-941c-4624-9034-a2cc18f9b250",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Process WhatsApp Status Update\n// Updated for new messages table schema (from_number, to_number, updated_at)\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const body = item.json.body;\n  if (!body || !body.entry) continue;\n\n  for (const entry of body.entry) {\n    if (!entry.changes) continue;\n\n    for (const change of entry.changes) {\n      const value = change.value;\n      if (!value || !value.statuses) continue;\n\n      // Get your business phone number from metadata\n      const businessPhone = value.metadata?.display_phone_number || '';\n      const phoneNumberId = value.metadata?.phone_number_id || '';\n\n      for (const statusData of value.statuses) {\n        const status = statusData.status;\n        const wamid = statusData.id;\n        const recipientPhone = statusData.recipient_id;\n        const rawTimestamp = statusData.timestamp;\n        const timestampISO = new Date(parseInt(rawTimestamp) * 1000).toISOString();\n\n        const updatePayload = {\n          wamid: wamid,\n          status: status,\n          from_number: businessPhone,   // Status updates are for outbound messages (from you)\n          to_number: recipientPhone,    // To the customer\n          direction: 'outbound',\n          updated_at: new Date().toISOString(),\n        };\n\n        // Assign timestamp field based on status\n        if (status === 'sent') {\n          updatePayload.sent_at = timestampISO;\n        } else if (status === 'delivered') {\n          updatePayload.delivered_at = timestampISO;\n        } else if (status === 'read') {\n          updatePayload.read_at = timestampISO;\n        } else if (status === 'failed') {\n          updatePayload.failed_at = timestampISO;\n          // Capture failure reason if available\n          if (statusData.errors && statusData.errors.length > 0) {\n            updatePayload.failure_reason = statusData.errors\n              .map(e => `${e.code}: ${e.title} - ${e.message || ''}`)\n              .join('; ');\n          }\n        }\n\n        // Pricing info\n        if (statusData.pricing) {\n          updatePayload.is_billable = statusData.pricing.billable;\n          updatePayload.pricing_model = statusData.pricing.pricing_model;\n          updatePayload.pricing_category = statusData.pricing.category;\n        }\n\n        // Include metadata for reference\n        updatePayload.phone_number_id = phoneNumberId;\n\n        results.push({ json: updatePayload });\n      }\n    }\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        -336
+      ],
+      "id": "163346a6-dcd0-4f5d-9207-8d11557ae268",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "de447aea-4d9b-404f-a9ba-90b2cae05535",
+              "leftValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].type }}",
+              "rightValue": "button",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2256,
+        304
+      ],
+      "id": "54228476-c182-4c1c-89c1-cb02c98059d0",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5da5d54e-c105-4e84-b7e9-7c0f9fb2174f",
+              "leftValue": "={{ $('Switch').item.json.body.entry[0].changes[0].value.messages[0].button.text }}",
+              "rightValue": "Not Now",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2496,
+        192
+      ],
+      "id": "0d41d494-7c14-451e-8941-9c05cded2240",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "={{ $json.from_number }}",
+        "textBody": "Thank you for your interest 🤍\n\nOur Senior Architect will connect with you within the next 24 hours to understand your vision and discuss your project in detail.\n\nMeanwhile, explore our work and know more about us:\n\n🗂️ Portfolio\nhttps://drive.google.com/file/d/1tWr0w8SNjYBeIYvlSGsJhMu2yVGIOgn_/view?usp=sharing\n\n🏛️ Website\nhttps://weinnovarch.com\n\n📸 Instagram:\nhttps://www.instagram.com/innov_arc\n\n🎬 YouTube\nhttps://www.youtube.com/@Innov_arc\n\nWe look forward to crafting something timeless for you ✨\n\n— Innov Arch | Interiors & Architects",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2880,
+        288
+      ],
+      "id": "43fe5f99-e9df-45f0-aaed-e3e87daba6ea",
+      "name": "Send message1",
+      "webhookId": "76c74ce8-0e9f-42bd-9092-ffc3299a43f8",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "=918178262805",
+        "textBody": "={{ $('Switch').item.json.body.entry[0].changes[0].value.contacts[0].profile.name }} showed us interest \nHis contact number is {{ $('Switch').item.json.body.entry[0].changes[0].value.messages[0].from }}\nPlease Contact as soon as posible ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3536,
+        288
+      ],
+      "id": "ce9afffb-9fb3-43ec-9917-72b73c9fe40d",
+      "name": "Send message2",
+      "webhookId": "76c74ce8-0e9f-42bd-9092-ffc3299a43f8",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v24.0/757676046966708/subscribed_apps",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAROU3e1CLUBQnxhjH2dWi71m5tdHP9CKFUY2UA3n7a2tjQn2tOG34KjZCalZBCgIAYHBN3IYoumWHgJJm3vBTPebWKXlLSkEZAMc3w107jIEwUZB8aCXQmHZB0Aiq0IvxAt7dgnZAtZCguCNryLi4M1dmN1d6nyZAAjkTJZCZAf9pwEpPxZAhrZBoAI41cq0ZAiIxnGSGQZDZD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "override_callback_uri",
+              "value": "https://weinnovarch.app.n8n.cloud/webhook/whatsapp-webhook"
+            },
+            {
+              "name": "verify_token",
+              "value": "Harshit@1234483292"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3200,
+        848
+      ],
+      "id": "f38a8a6c-bd78-47ee-81cf-ab215e0f09d9",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c365144e-c600-47ac-8ee8-a047ed4cc2a8",
+              "leftValue": "={{ $('Switch').item.json.body.entry[0].changes[0].value.messages[0].context }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1904,
+        656
+      ],
+      "id": "521c53fe-e840-44c7-80fc-155b135a3334",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        -896
+      ],
+      "id": "5c0e7f40-9517-4ed9-a933-8fbe76502729",
+      "name": "Respond to Webhook2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        944,
+        -16
+      ],
+      "id": "48b73ffc-b322-4e3f-96c8-ddff609461a2",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Process Inbound WhatsApp Message\n// Place this AFTER the Switch node \"Incoming Message\" output\n// BEFORE the If3 node\n// This prepares data for contacts upsert, inbound message logging, and lead creation\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const body = item.json.body;\n  if (!body || !body.entry) continue;\n\n  for (const entry of body.entry) {\n    if (!entry.changes) continue;\n\n    for (const change of entry.changes) {\n      const value = change.value;\n      if (!value || !value.messages) continue;\n\n      const metadata = value.metadata || {};\n      const businessPhone = metadata.display_phone_number || '';\n      const phoneNumberId = metadata.phone_number_id || '';\n\n      for (const msg of value.messages) {\n        const contact = value.contacts?.[0] || {};\n        const customerPhone = msg.from;\n        const customerName = contact.profile?.name || '';\n        const waId = contact.wa_id || customerPhone;\n        const msgTimestamp = new Date(parseInt(msg.timestamp) * 1000).toISOString();\n\n        // Determine message content based on type\n        let messageBody = '';\n        let messageType = msg.type || 'text';\n        let buttonText = '';\n        let isReply = false;\n        let replyToWamid = '';\n        let mediaUrl = '';\n        let mediaMimeType = '';\n\n        switch (messageType) {\n          case 'text':\n            messageBody = msg.text?.body || '';\n            break;\n          case 'button':\n            buttonText = msg.button?.text || '';\n            messageBody = buttonText;\n            break;\n          case 'image':\n            messageBody = msg.image?.caption || '[Image]';\n            mediaUrl = msg.image?.id || '';\n            mediaMimeType = msg.image?.mime_type || '';\n            break;\n          case 'video':\n            messageBody = msg.video?.caption || '[Video]';\n            mediaUrl = msg.video?.id || '';\n            mediaMimeType = msg.video?.mime_type || '';\n            break;\n          case 'audio':\n            messageBody = '[Audio]';\n            mediaUrl = msg.audio?.id || '';\n            mediaMimeType = msg.audio?.mime_type || '';\n            break;\n          case 'document':\n            messageBody = msg.document?.caption || msg.document?.filename || '[Document]';\n            mediaUrl = msg.document?.id || '';\n            mediaMimeType = msg.document?.mime_type || '';\n            break;\n          case 'location':\n            messageBody = `[Location: ${msg.location?.latitude}, ${msg.location?.longitude}]`;\n            break;\n          case 'reaction':\n            messageBody = msg.reaction?.emoji || '[Reaction]';\n            break;\n          case 'interactive':\n            messageBody = msg.interactive?.button_reply?.title || \n                         msg.interactive?.list_reply?.title || \n                         '[Interactive]';\n            break;\n          default:\n            messageBody = `[${messageType}]`;\n        }\n\n        // Check if this is a reply to a previous message\n        if (msg.context) {\n          isReply = true;\n          replyToWamid = msg.context.id || '';\n        }\n\n        const output = {\n          // Contact data (for contacts table upsert)\n          contact_phone: waId,\n          contact_name: customerName,\n\n          // Inbound message data (for messages table insert)\n          inbound_wamid: msg.id,\n          from_number: customerPhone,\n          to_number: businessPhone,\n          direction: 'inbound',\n          message_type: messageType,\n          message_body: messageBody,\n          button_text: buttonText,\n          is_reply: isReply,\n          reply_to_wamid: replyToWamid,\n          media_url: mediaUrl,\n          media_mime_type: mediaMimeType,\n          status: 'delivered',\n          delivered_at: msgTimestamp,\n          sent_at: msgTimestamp,\n\n          // Metadata\n          business_phone: businessPhone,\n          phone_number_id: phoneNumberId,\n          msg_timestamp: msgTimestamp,\n\n          // Pass through original data for downstream nodes\n          original_body: body,\n        };\n\n        results.push({ json: output });\n      }\n    }\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        368
+      ],
+      "id": "0eaead30-c694-40d5-9eed-43d6f60383c1",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "contacts",
+          "mode": "list",
+          "cachedResultName": "contacts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $json.contact_phone }}",
+            "name": "={{ $json.contact_name }}",
+            "last_message_at": "={{ $json.msg_timestamp }}",
+            "last_message_preview": "={{ $json.message_body.substring(0,100) }}",
+            "is_active": true
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "tags",
+              "displayName": "tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "last_message_at",
+              "displayName": "last_message_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "last_message_preview",
+              "displayName": "last_message_preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "total_messages_in",
+              "displayName": "total_messages_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "total_messages_out",
+              "displayName": "total_messages_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1568,
+        368
+      ],
+      "id": "7a1e7ed5-b67e-4c69-a04f-be3cad071836",
+      "name": "upsert into contacts",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_reply": "={{ $('Code in JavaScript1').item.json.is_reply }}",
+            "wamid": "={{ $('Code in JavaScript1').item.json.inbound_wamid }}",
+            "from_number": "={{ $('Code in JavaScript1').item.json.from_number }}",
+            "to_number": "={{ $('Code in JavaScript1').item.json.to_number }}",
+            "direction": "={{ $('Code in JavaScript1').item.json.direction }}",
+            "message_type": "={{ $('Code in JavaScript1').item.json.message_type }}",
+            "message_body": "={{ $('Code in JavaScript1').item.json.message_body }}",
+            "reply_to_wamid": "={{ $('Code in JavaScript1').item.json.reply_to_wamid }}",
+            "button_text": "={{ $('Code in JavaScript1').item.json.button_text }}",
+            "status": "={{ $('Code in JavaScript1').item.json.status }}",
+            "sent_at": "={{ $('Code in JavaScript1').item.json.sent_at }}",
+            "delivered_at": "={{ $('Code in JavaScript1').item.json.delivered_at }}",
+            "media_url": "={{ $('Code in JavaScript1').item.json.media_url }}",
+            "media_mime_type": "={{ $('Code in JavaScript1').item.json.media_mime_type }}",
+            "contact_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "wamid"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "wamid",
+              "displayName": "wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "from_number",
+              "displayName": "from_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "to_number",
+              "displayName": "to_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "message_type",
+              "displayName": "message_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "media_url",
+              "displayName": "media_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "media_mime_type",
+              "displayName": "media_mime_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "template_name",
+              "displayName": "template_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "is_reply",
+              "displayName": "is_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "reply_to_wamid",
+              "displayName": "reply_to_wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "button_text",
+              "displayName": "button_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "delivered_at",
+              "displayName": "delivered_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "read_at",
+              "displayName": "read_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "failed_at",
+              "displayName": "failed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "failure_reason",
+              "displayName": "failure_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "pricing_model",
+              "displayName": "pricing_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "pricing_category",
+              "displayName": "pricing_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "is_billable",
+              "displayName": "is_billable",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "contact_id",
+              "displayName": "contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1792,
+        368
+      ],
+      "id": "e6dc38ae-9137-4e5b-a026-280cd4d7ebac",
+      "name": "upsert into messages",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Log Outbound Reply\n// Place this AFTER each \"Send message\" node\n// This prepares data to insert the outbound message into the messages table\n// and update the contacts table\n\n// Get the send message response (contains wamid of sent message)\nconst sendResponse = $input.all();\n\n// Get the original inbound message data from earlier in the workflow\n// Adjust the node name reference based on your actual node names\nconst inboundData = $('Code in JavaScript1').first().json;\n\nconst results = [];\n\nfor (const item of sendResponse) {\n  // The WhatsApp Send node returns the wamid in the response\n  // Structure: item.json.messages[0].id\n  const sentWamid = item.json?.messages?.[0]?.id || '';\n  const sentMessageBody = ''; // Will be filled based on which Send node was used\n\n  const output = {\n    // Outbound message data (for messages table insert)\n    wamid: sentWamid,\n    from_number: inboundData.to_number || inboundData.business_phone,  // Your business number\n    to_number: inboundData.from_number || inboundData.contact_phone,    // Customer number\n    direction: 'outbound',\n    message_type: 'text',\n    message_body: sentMessageBody,  // You can hardcode this or pull from the Send node params\n    status: 'accepted',\n    sent_at: new Date().toISOString(),\n    is_reply: true,\n    reply_to_wamid: inboundData.inbound_wamid || '',\n\n    // Contact data for update\n    contact_phone: inboundData.contact_phone,\n    contact_name: inboundData.contact_name,\n  };\n\n  results.push({ json: output });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3088,
+        288
+      ],
+      "id": "84d526d0-a325-4a13-9a6f-46d7fd3527fa",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "wamid",
+              "fieldValue": "={{ $json.wamid }}"
+            },
+            {
+              "fieldId": "from_number",
+              "fieldValue": "={{ $json.from_number }}"
+            },
+            {
+              "fieldId": "to_number",
+              "fieldValue": "={{ $json.to_number }}"
+            },
+            {
+              "fieldId": "direction",
+              "fieldValue": "={{ $json.direction }}"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "={{ $json.message_type }}"
+            },
+            {
+              "fieldId": "message_body",
+              "fieldValue": "=Thank you for your interest 🤍\n\nOur Senior Architect will connect with you within the next 24 hours to understand your vision and discuss your project in detail.\n\nMeanwhile, explore our work and know more about us:\n\n🗂️ Portfolio\nhttps://drive.google.com/file/d/1tWr0w8SNjYBeIYvlSGsJhMu2yVGIOgn_/view?usp=sharing\n\n🏛️ Website\nhttps://weinnovarch.com\n\n📸 Instagram:\nhttps://www.instagram.com/innov_arc\n\n🎬 YouTube\nhttps://www.youtube.com/@Innov_arc\n\nWe look forward to crafting something timeless for you ✨\n\n— Innov Arch | Interiors & Architects"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "sent_at",
+              "fieldValue": "={{ $json.sent_at }}"
+            },
+            {
+              "fieldId": "is_reply",
+              "fieldValue": "={{ $json.is_reply }}"
+            },
+            {
+              "fieldId": "reply_to_wamid",
+              "fieldValue": "={{ $json.reply_to_wamid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        288
+      ],
+      "id": "886aa592-0c45-421c-98e6-463297d20772",
+      "name": "Create a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HSWWgMoeUxcppRaV",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Log Outbound Reply\n// Place this AFTER each \"Send message\" node\n// This prepares data to insert the outbound message into the messages table\n// and update the contacts table\n\n// Get the send message response (contains wamid of sent message)\nconst sendResponse = $input.all();\n\n// Get the original inbound message data from earlier in the workflow\n// Adjust the node name reference based on your actual node names\nconst inboundData = $('Code in JavaScript1').first().json;\n\nconst results = [];\n\nfor (const item of sendResponse) {\n  // The WhatsApp Send node returns the wamid in the response\n  // Structure: item.json.messages[0].id\n  const sentWamid = item.json?.messages?.[0]?.id || '';\n  const sentMessageBody = ''; // Will be filled based on which Send node was used\n\n  const output = {\n    // Outbound message data (for messages table insert)\n    wamid: sentWamid,\n    from_number: inboundData.to_number || inboundData.business_phone,  // Your business number\n    to_number: inboundData.from_number || inboundData.contact_phone,    // Customer number\n    direction: 'outbound',\n    message_type: 'text',\n    message_body: sentMessageBody,  // You can hardcode this or pull from the Send node params\n    status: 'accepted',\n    sent_at: new Date().toISOString(),\n    is_reply: true,\n    reply_to_wamid: inboundData.inbound_wamid || '',\n\n    // Contact data for update\n    contact_phone: inboundData.contact_phone,\n    contact_name: inboundData.contact_name,\n  };\n\n  results.push({ json: output });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3088,
+        64
+      ],
+      "id": "097d789a-7ac4-40a8-ab01-201a9acec292",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "wamid",
+              "fieldValue": "={{ $json.wamid }}"
+            },
+            {
+              "fieldId": "from_number",
+              "fieldValue": "={{ $json.from_number }}"
+            },
+            {
+              "fieldId": "to_number",
+              "fieldValue": "={{ $json.to_number }}"
+            },
+            {
+              "fieldId": "direction",
+              "fieldValue": "={{ $json.direction }}"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "={{ $json.message_type }}"
+            },
+            {
+              "fieldId": "message_body",
+              "fieldValue": "=No worries at all! Whenever you're ready to start your project, feel free to reach out. We'd love to help. 😊"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "sent_at",
+              "fieldValue": "={{ $json.sent_at }}"
+            },
+            {
+              "fieldId": "is_reply",
+              "fieldValue": "={{ $json.is_reply }}"
+            },
+            {
+              "fieldId": "reply_to_wamid",
+              "fieldValue": "={{ $json.reply_to_wamid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        64
+      ],
+      "id": "7cc9e903-9139-4511-a29a-f73560c1417e",
+      "name": "Create a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HSWWgMoeUxcppRaV",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "wamid",
+              "fieldValue": "={{ $json.messages[0].id }}"
+            },
+            {
+              "fieldId": "from_number",
+              "fieldValue": "={{ $('Code in JavaScript2').item.json.from_number }}"
+            },
+            {
+              "fieldId": "to_number",
+              "fieldValue": "=918178262805"
+            },
+            {
+              "fieldId": "direction",
+              "fieldValue": "=outbound"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "message_body",
+              "fieldValue": "={{ $('Switch').item.json.body.entry[0].changes[0].value.contacts[0].profile.name }} showed us interest \nHis contact number is {{ $('Switch').item.json.body.entry[0].changes[0].value.messages[0].from }}\nPlease Contact as soon as posible "
+            },
+            {
+              "fieldId": "sent_at",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "is_reply",
+              "fieldValue": "=false"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3856,
+        288
+      ],
+      "id": "e55a8649-304e-4238-be93-13c0fa946a82",
+      "name": "Create a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HSWWgMoeUxcppRaV",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "messages",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "contact_id",
+              "keyValue": "={{ $json.contact_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        496
+      ],
+      "id": "1150220c-09eb-4ac8-91b7-985fbf0411f4",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HSWWgMoeUxcppRaV",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        240
+      ],
+      "id": "cf1d4ee7-fd33-421c-a8ec-e84d9a2d5db5",
+      "name": "Wait",
+      "webhookId": "68af461d-dfd3-4fda-b80e-da5826ecb287"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_billable": "={{ $json.is_billable }}",
+            "wamid": "={{ $json.wamid }}",
+            "status": "={{ $json.status }}",
+            "delivered_at": "={{ $json.delivered_at }}",
+            "failed_at": "={{ $json.failed_at }}",
+            "pricing_model": "={{ $json.pricing_model }}",
+            "pricing_category": "={{ $json.pricing_category }}",
+            "from_number": "={{ $json.from_number }}",
+            "to_number": "={{ $json.to_number ?? $json.phone}}",
+            "direction": "={{ $json.direction }}",
+            "failure_reason": "={{ $('Webhook').first().json.body.entry[0].changes[0].value.statuses[0].errors[0].error_data.details }}",
+            "updated_at": "={{ $json.updated_at }}"
+          },
+          "matchingColumns": [
+            "wamid"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "wamid",
+              "displayName": "wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "from_number",
+              "displayName": "from_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "to_number",
+              "displayName": "to_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_type",
+              "displayName": "message_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "media_url",
+              "displayName": "media_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "media_mime_type",
+              "displayName": "media_mime_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "template_name",
+              "displayName": "template_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_reply",
+              "displayName": "is_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reply_to_wamid",
+              "displayName": "reply_to_wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "button_text",
+              "displayName": "button_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "delivered_at",
+              "displayName": "delivered_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "read_at",
+              "displayName": "read_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "failed_at",
+              "displayName": "failed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "failure_reason",
+              "displayName": "failure_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pricing_model",
+              "displayName": "pricing_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pricing_category",
+              "displayName": "pricing_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_billable",
+              "displayName": "is_billable",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_id",
+              "displayName": "contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2048,
+        -336
+      ],
+      "id": "b25683cb-148b-4689-8cf3-a8f741a75ad9",
+      "name": "Update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "=918178295081",
+        "textBody": "={{ $('Switch').item.json.body.entry[0].changes[0].value.contacts[0].profile.name }} showed us interest \nHis contact number is {{ $('Switch').item.json.body.entry[0].changes[0].value.messages[0].from }}\nPlease Contact as soon as posible ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3504,
+        528
+      ],
+      "id": "bfbed092-28fb-40d8-ab5d-ff1627c9fffb",
+      "name": "Send message3",
+      "webhookId": "76c74ce8-0e9f-42bd-9092-ffc3299a43f8",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "wamid",
+              "fieldValue": "={{ $json.messages[0].id }}"
+            },
+            {
+              "fieldId": "from_number",
+              "fieldValue": "={{ $('Code in JavaScript2').item.json.from_number }}"
+            },
+            {
+              "fieldId": "to_number",
+              "fieldValue": "=918178262805"
+            },
+            {
+              "fieldId": "direction",
+              "fieldValue": "=outbound"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "message_body",
+              "fieldValue": "={{ $('Switch').item.json.body.entry[0].changes[0].value.contacts[0].profile.name }} showed us interest \nHis contact number is {{ $('Switch').item.json.body.entry[0].changes[0].value.messages[0].from }}\nPlease Contact as soon as posible "
+            },
+            {
+              "fieldId": "sent_at",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "is_reply",
+              "fieldValue": "=false"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        528
+      ],
+      "id": "93964a79-48a0-4245-a7b2-cc265ad426f4",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HSWWgMoeUxcppRaV",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.entry[0].changes[0].value.statuses[0].status }}",
+                    "rightValue": "delivered",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3b65cb3e-766f-4818-9111-ab8726999034"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "delivered"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8b7b0950-1e67-481e-ae0e-b763b0b7912f",
+                    "leftValue": "={{ $json.body.entry[0].changes[0].value.statuses[0].status }}",
+                    "rightValue": "sent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "595cc590-63cf-443e-adbb-fda2a0b7143b",
+                    "leftValue": "={{ $json.body.entry[0].changes[0].value.statuses[0].status }}",
+                    "rightValue": "read",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "read"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b9ce020a-9ca2-4d20-860c-ed8508b41c92",
+                    "leftValue": "={{ $json.body.entry[0].changes[0].value.statuses[0].status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1392,
+        48
+      ],
+      "id": "6c2663db-eb0c-4c94-aec6-ebdd2cbe0dbf",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Process WhatsApp Status Update\n// Updated for new messages table schema (from_number, to_number, updated_at)\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const body = item.json.body;\n  if (!body || !body.entry) continue;\n\n  for (const entry of body.entry) {\n    if (!entry.changes) continue;\n\n    for (const change of entry.changes) {\n      const value = change.value;\n      if (!value || !value.statuses) continue;\n\n      // Get your business phone number from metadata\n      const businessPhone = value.metadata?.display_phone_number || '';\n      const phoneNumberId = value.metadata?.phone_number_id || '';\n\n      for (const statusData of value.statuses) {\n        const status = statusData.status;\n        const wamid = statusData.id;\n        const recipientPhone = statusData.recipient_id;\n        const rawTimestamp = statusData.timestamp;\n        const timestampISO = new Date(parseInt(rawTimestamp) * 1000).toISOString();\n\n        const updatePayload = {\n          wamid: wamid,\n          status: status,\n          from_number: businessPhone,   // Status updates are for outbound messages (from you)\n          to_number: recipientPhone,    // To the customer\n          direction: 'outbound',\n          updated_at: new Date().toISOString(),\n        };\n\n        // Assign timestamp field based on status\n        if (status === 'sent') {\n          updatePayload.sent_at = timestampISO;\n        } else if (status === 'delivered') {\n          updatePayload.delivered_at = timestampISO;\n        } else if (status === 'read') {\n          updatePayload.read_at = timestampISO;\n        } else if (status === 'failed') {\n          updatePayload.failed_at = timestampISO;\n          // Capture failure reason if available\n          if (statusData.errors && statusData.errors.length > 0) {\n            updatePayload.failure_reason = statusData.errors\n              .map(e => `${e.code}: ${e.title} - ${e.message || ''}`)\n              .join('; ');\n          }\n        }\n\n        // Pricing info\n        if (statusData.pricing) {\n          updatePayload.is_billable = statusData.pricing.billable;\n          updatePayload.pricing_model = statusData.pricing.pricing_model;\n          updatePayload.pricing_category = statusData.pricing.category;\n        }\n\n        // Include metadata for reference\n        updatePayload.phone_number_id = phoneNumberId;\n\n        results.push({ json: updatePayload });\n      }\n    }\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        -160
+      ],
+      "id": "84769edd-5296-4b48-b4e6-9452a753e06c",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_billable": "={{ $json.is_billable }}",
+            "wamid": "={{ $json.wamid }}",
+            "status": "={{ $json.status }}",
+            "pricing_model": "={{ $json.pricing_model }}",
+            "pricing_category": "={{ $json.pricing_category }}",
+            "from_number": "={{ $json.from_number }}",
+            "to_number": "={{ $json.to_number ?? $json.phone}}",
+            "direction": "={{ $json.direction }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "sent_at": "={{ $json.sent_at }}"
+          },
+          "matchingColumns": [
+            "wamid"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "wamid",
+              "displayName": "wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "from_number",
+              "displayName": "from_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "to_number",
+              "displayName": "to_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_type",
+              "displayName": "message_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "media_url",
+              "displayName": "media_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "media_mime_type",
+              "displayName": "media_mime_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "template_name",
+              "displayName": "template_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_reply",
+              "displayName": "is_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reply_to_wamid",
+              "displayName": "reply_to_wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "button_text",
+              "displayName": "button_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "delivered_at",
+              "displayName": "delivered_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "read_at",
+              "displayName": "read_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "failed_at",
+              "displayName": "failed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "failure_reason",
+              "displayName": "failure_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pricing_model",
+              "displayName": "pricing_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pricing_category",
+              "displayName": "pricing_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_billable",
+              "displayName": "is_billable",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_id",
+              "displayName": "contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2048,
+        -160
+      ],
+      "id": "f2271d8d-b429-41e8-aeaf-387809392536",
+      "name": "Update rows in a table1",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Process WhatsApp Status Update\n// Updated for new messages table schema (from_number, to_number, updated_at)\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const body = item.json.body;\n  if (!body || !body.entry) continue;\n\n  for (const entry of body.entry) {\n    if (!entry.changes) continue;\n\n    for (const change of entry.changes) {\n      const value = change.value;\n      if (!value || !value.statuses) continue;\n\n      // Get your business phone number from metadata\n      const businessPhone = value.metadata?.display_phone_number || '';\n      const phoneNumberId = value.metadata?.phone_number_id || '';\n\n      for (const statusData of value.statuses) {\n        const status = statusData.status;\n        const wamid = statusData.id;\n        const recipientPhone = statusData.recipient_id;\n        const rawTimestamp = statusData.timestamp;\n        const timestampISO = new Date(parseInt(rawTimestamp) * 1000).toISOString();\n\n        const updatePayload = {\n          wamid: wamid,\n          status: status,\n          from_number: businessPhone,   // Status updates are for outbound messages (from you)\n          to_number: recipientPhone,    // To the customer\n          direction: 'outbound',\n          updated_at: new Date().toISOString(),\n        };\n\n        // Assign timestamp field based on status\n        if (status === 'sent') {\n          updatePayload.sent_at = timestampISO;\n        } else if (status === 'delivered') {\n          updatePayload.delivered_at = timestampISO;\n        } else if (status === 'read') {\n          updatePayload.read_at = timestampISO;\n        } else if (status === 'failed') {\n          updatePayload.failed_at = timestampISO;\n          // Capture failure reason if available\n          if (statusData.errors && statusData.errors.length > 0) {\n            updatePayload.failure_reason = statusData.errors\n              .map(e => `${e.code}: ${e.title} - ${e.message || ''}`)\n              .join('; ');\n          }\n        }\n\n        // Pricing info\n        if (statusData.pricing) {\n          updatePayload.is_billable = statusData.pricing.billable;\n          updatePayload.pricing_model = statusData.pricing.pricing_model;\n          updatePayload.pricing_category = statusData.pricing.category;\n        }\n\n        // Include metadata for reference\n        updatePayload.phone_number_id = phoneNumberId;\n\n        results.push({ json: updatePayload });\n      }\n    }\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        16
+      ],
+      "id": "39f41b41-726a-4ac8-9ace-de1ed7b17086",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_billable": "={{ $json.is_billable }}",
+            "wamid": "={{ $json.wamid }}",
+            "status": "={{ $json.status }}",
+            "read_at": "={{ $json.read_at }}",
+            "pricing_model": "={{ $json.pricing_model }}",
+            "pricing_category": "={{ $json.pricing_category }}",
+            "from_number": "={{ $json.from_number }}",
+            "to_number": "={{ $json.to_number ?? $json.phone}}",
+            "direction": "={{ $json.direction }}",
+            "updated_at": "={{ $json.updated_at }}"
+          },
+          "matchingColumns": [
+            "wamid"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "wamid",
+              "displayName": "wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "from_number",
+              "displayName": "from_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "to_number",
+              "displayName": "to_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_type",
+              "displayName": "message_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "media_url",
+              "displayName": "media_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "media_mime_type",
+              "displayName": "media_mime_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "template_name",
+              "displayName": "template_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_reply",
+              "displayName": "is_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reply_to_wamid",
+              "displayName": "reply_to_wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "button_text",
+              "displayName": "button_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "delivered_at",
+              "displayName": "delivered_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "read_at",
+              "displayName": "read_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "failed_at",
+              "displayName": "failed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "failure_reason",
+              "displayName": "failure_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pricing_model",
+              "displayName": "pricing_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pricing_category",
+              "displayName": "pricing_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_billable",
+              "displayName": "is_billable",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_id",
+              "displayName": "contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2048,
+        16
+      ],
+      "id": "b979a6ed-0648-4423-897f-0ad63db9d32c",
+      "name": "Update rows in a table2",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Process WhatsApp Status Update\n// Updated for new messages table schema (from_number, to_number, updated_at)\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const body = item.json.body;\n  if (!body || !body.entry) continue;\n\n  for (const entry of body.entry) {\n    if (!entry.changes) continue;\n\n    for (const change of entry.changes) {\n      const value = change.value;\n      if (!value || !value.statuses) continue;\n\n      // Get your business phone number from metadata\n      const businessPhone = value.metadata?.display_phone_number || '';\n      const phoneNumberId = value.metadata?.phone_number_id || '';\n\n      for (const statusData of value.statuses) {\n        const status = statusData.status;\n        const wamid = statusData.id;\n        const recipientPhone = statusData.recipient_id;\n        const rawTimestamp = statusData.timestamp;\n        const timestampISO = new Date(parseInt(rawTimestamp) * 1000).toISOString();\n\n        const updatePayload = {\n          wamid: wamid,\n          status: status,\n          from_number: businessPhone,   // Status updates are for outbound messages (from you)\n          to_number: recipientPhone,    // To the customer\n          direction: 'outbound',\n          updated_at: new Date().toISOString(),\n        };\n\n        // Assign timestamp field based on status\n        if (status === 'sent') {\n          updatePayload.sent_at = timestampISO;\n        } else if (status === 'delivered') {\n          updatePayload.delivered_at = timestampISO;\n        } else if (status === 'read') {\n          updatePayload.read_at = timestampISO;\n        } else if (status === 'failed') {\n          updatePayload.failed_at = timestampISO;\n          // Capture failure reason if available\n          if (statusData.errors && statusData.errors.length > 0) {\n            updatePayload.failure_reason = statusData.errors\n              .map(e => `${e.code}: ${e.title} - ${e.message || ''}`)\n              .join('; ');\n          }\n        }\n\n        // Pricing info\n        if (statusData.pricing) {\n          updatePayload.is_billable = statusData.pricing.billable;\n          updatePayload.pricing_model = statusData.pricing.pricing_model;\n          updatePayload.pricing_category = statusData.pricing.category;\n        }\n\n        // Include metadata for reference\n        updatePayload.phone_number_id = phoneNumberId;\n\n        results.push({ json: updatePayload });\n      }\n    }\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        176
+      ],
+      "id": "a04c066c-706a-4123-87d7-d1bcd03688e4",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_billable": "={{ $json.is_billable }}",
+            "wamid": "={{ $json.wamid }}",
+            "status": "={{ $json.status }}",
+            "failed_at": "={{ $json.failed_at }}",
+            "pricing_model": "={{ $json.pricing_model }}",
+            "pricing_category": "={{ $json.pricing_category }}",
+            "from_number": "={{ $json.from_number }}",
+            "to_number": "={{ $json.to_number ?? $json.phone}}",
+            "direction": "={{ $json.direction }}",
+            "failure_reason": "={{ $('Webhook').first().json.body.entry[0].changes[0].value.statuses[0].errors[0].error_data.details }}",
+            "updated_at": "={{ $json.updated_at }}"
+          },
+          "matchingColumns": [
+            "wamid"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "wamid",
+              "displayName": "wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "from_number",
+              "displayName": "from_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "to_number",
+              "displayName": "to_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_type",
+              "displayName": "message_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "media_url",
+              "displayName": "media_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "media_mime_type",
+              "displayName": "media_mime_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "template_name",
+              "displayName": "template_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_reply",
+              "displayName": "is_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reply_to_wamid",
+              "displayName": "reply_to_wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "button_text",
+              "displayName": "button_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "delivered_at",
+              "displayName": "delivered_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "read_at",
+              "displayName": "read_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "failed_at",
+              "displayName": "failed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "failure_reason",
+              "displayName": "failure_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pricing_model",
+              "displayName": "pricing_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pricing_category",
+              "displayName": "pricing_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_billable",
+              "displayName": "is_billable",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_id",
+              "displayName": "contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2048,
+        176
+      ],
+      "id": "843dd621-7b47-4ff9-9246-547682a63120",
+      "name": "Update rows in a table3",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "=918178295081",
+        "textBody": "={{ $('Switch').item.json.body.entry[0].changes[0].value.contacts[0].profile.name }} we got a manual reply from this client please visit the whatsapp automation board to chat \nHis contact number is {{ $('Switch').item.json.body.entry[0].changes[0].value.messages[0].from }}.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2192,
+        736
+      ],
+      "id": "372a129a-c9bb-4c16-b31f-336a08ea7df1",
+      "name": "Send message4",
+      "webhookId": "76c74ce8-0e9f-42bd-9092-ffc3299a43f8",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.weinnovarch.com",
+            "user-agent": "facebookexternalua",
+            "content-length": "480",
+            "accept": "*/*",
+            "accept-encoding": "deflate, gzip",
+            "content-type": "application/json",
+            "x-forwarded-for": "173.252.107.9",
+            "x-forwarded-host": "n8n.weinnovarch.com",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "63a473d2b930",
+            "x-hub-signature": "sha1=9ed1c13bd38b994d8e76e90064253020c958477e",
+            "x-hub-signature-256": "sha256=7b9c99150887d95206921856377a042ae08adc7b9e0f274b521aeff1b1578751",
+            "x-real-ip": "173.252.107.9"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "object": "whatsapp_business_account",
+            "entry": [
+              {
+                "id": "757676046966708",
+                "changes": [
+                  {
+                    "value": {
+                      "messaging_product": "whatsapp",
+                      "metadata": {
+                        "display_phone_number": "917011219741",
+                        "phone_number_id": "946716488530630"
+                      },
+                      "contacts": [
+                        {
+                          "profile": {
+                            "name": "Harshit Vishnoi"
+                          },
+                          "wa_id": "918178295081"
+                        }
+                      ],
+                      "messages": [
+                        {
+                          "from": "918178295081",
+                          "id": "wamid.HBgMOTE4MTc4Mjk1MDgxFQIAEhgWM0VCMDM4NjQzQURGQTNGNzA4RERBOAA=",
+                          "timestamp": "1772274852",
+                          "text": {
+                            "body": "hi"
+                          },
+                          "type": "text"
+                        }
+                      ]
+                    },
+                    "field": "messages"
+                  }
+                ]
+              }
+            ]
+          },
+          "webhookUrl": "https://n8n.weinnovarch.com/webhook/whatsapppp",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0,
+          "input": 1
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "upsert into contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upsert into contacts": {
+      "main": [
+        [
+          {
+            "node": "upsert into messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upsert into messages": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Create a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Create a row2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row1": {
+      "main": [
+        [
+          {
+            "node": "Send message2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message2": {
+      "main": [
+        [
+          {
+            "node": "Create a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message3": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "78046a21-f0ad-45ac-bad3-23b487c9434f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "507a669a968cdb9724b0d83b289010a62a52df6200495e962b06d2f1d47c342e"
+  },
+  "id": "VgkAOivv6tUuND1v",
+  "tags": []
+}

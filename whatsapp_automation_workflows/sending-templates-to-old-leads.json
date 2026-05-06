@@ -1,0 +1,887 @@
+{
+  "name": "sending-templates-to-old-leads",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Normalize Indian Phone Number Format (91XXXXXXXXXX)\n\nconst items = $input.all();\n\nfor (const item of items) {\n\n  let phone = item.json.phone_number; // ✅ Use item, not $item\n\n  if (!phone) {\n    item.json.phone_validation_error = \"Phone number missing\";\n    continue;\n  }\n\n  // 1️⃣ Remove all non-numeric characters (+, spaces, etc.)\n  phone = String(phone).replace(/\\D/g, \"\");\n\n  // 2️⃣ If number is exactly 10 digits → add 91\n  if (phone.length === 10) {\n    phone = \"91\" + phone;\n  }\n\n  // 3️⃣ If starts with 91 and total length is 12 → keep it\n  else if (phone.startsWith(\"91\") && phone.length === 12) {\n    // valid, do nothing\n  }\n\n  // 4️⃣ If longer than 12 digits and starts with 91 → fix it\n  else if (phone.startsWith(\"91\") && phone.length > 12) {\n    phone = \"91\" + phone.slice(-10);\n  }\n\n  // 5️⃣ Otherwise → invalid\n  else {\n    item.json.phone_validation_error = \"Invalid phone number format\";\n    continue;\n  }\n\n  // ✅ Final assignment\n  item.json.phone_number = phone;\n}\n\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -96
+      ],
+      "id": "6f7e37ae-9f1a-4c80-bfda-1c485d7b5e2a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "wamid",
+              "fieldValue": "={{ $json.messages[0].id }}"
+            },
+            {
+              "fieldId": "from_number",
+              "fieldValue": "917011219741"
+            },
+            {
+              "fieldId": "to_number",
+              "fieldValue": "={{ $json.contacts[0].input }}"
+            },
+            {
+              "fieldId": "direction",
+              "fieldValue": "=outbound"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "message_body",
+              "fieldValue": "=Hello {{ $('leads upsert').item.json.name }} 😃, \n\nGreetings from Innov Arch (Interiors & Architects)✨.\n\nYou had earlier enquired about Desiging your {{ $('leads upsert').item.json.project_type }},\nWe are currently taking on a limited number of new projects.\nAre you planning to proceed with your construction or Architectural design work?\n\nOur Senior Architect will connect with you accordingly ."
+            },
+            {
+              "fieldId": "sent_at",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "is_reply",
+              "fieldValue": "=false"
+            },
+            {
+              "fieldId": "template_name",
+              "fieldValue": "banquet_ads"
+            },
+            {
+              "fieldId": "is_billable",
+              "fieldValue": "true"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "sent"
+            },
+            {
+              "fieldId": "contact_id",
+              "fieldValue": "={{ $('upsert into contacts').first().json.id }}"
+            },
+            {
+              "fieldId": "media_url",
+              "fieldValue": "https://weinnovarch.com/images/bliss.jpeg"
+            },
+            {
+              "fieldId": "media_mime_type",
+              "fieldValue": "image/jpeg"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        32
+      ],
+      "id": "da1093b7-1c2e-4da9-927b-a4240e870749",
+      "name": "Create a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HSWWgMoeUxcppRaV",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1O0Otkd4BrcRtSurbCupcVbbYNHemYCAug__E3XIKE-g",
+          "mode": "list",
+          "cachedResultName": "old-leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1O0Otkd4BrcRtSurbCupcVbbYNHemYCAug__E3XIKE-g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1316105867,
+          "mode": "list",
+          "cachedResultName": "Dec",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1O0Otkd4BrcRtSurbCupcVbbYNHemYCAug__E3XIKE-g/edit#gid=1316105867"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone_number": "={{ $('leads upsert').item.json.phone }}",
+            "message_status": "sent",
+            "wamid": "={{ $('Send message and wait for response').item.json.messages[0].id }}"
+          },
+          "matchingColumns": [
+            "phone_number"
+          ],
+          "schema": [
+            {
+              "id": "full_name",
+              "displayName": "full_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone_number",
+              "displayName": "phone_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Requirement",
+              "displayName": "Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Requirement_from_client",
+              "displayName": "Requirement_from_client",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_status",
+              "displayName": "message_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wamid",
+              "displayName": "wamid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1424,
+        32
+      ],
+      "id": "febec905-f9aa-4eaf-8e05-d0e568b1d30f",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6mqis9ZMtoqOOOKv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "contacts",
+          "mode": "list",
+          "cachedResultName": "contacts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $json.phone_number }}",
+            "name": "={{ $json.full_name }}",
+            "is_active": true,
+            "source": "facebook_lead_ad"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "tags",
+              "displayName": "tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "last_message_at",
+              "displayName": "last_message_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "last_message_preview",
+              "displayName": "last_message_preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "total_messages_in",
+              "displayName": "total_messages_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "total_messages_out",
+              "displayName": "total_messages_out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        32
+      ],
+      "id": "ef112d48-c856-4545-9afc-bd2b2bc4a740",
+      "name": "upsert into contacts",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "leads",
+          "mode": "list",
+          "cachedResultName": "leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "template_sent": true,
+            "phone": "={{ $json.phone }}",
+            "name": "={{ $json.name }}",
+            "project_type": "={{ $('Code in JavaScript1').item.json.Requirement }}",
+            "lead_source": "=meta-old-leads",
+            "lead_status": "NEW",
+            "template_sent_at": "={{ $now }}",
+            "contact_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "project_type",
+              "displayName": "project_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "lead_source",
+              "displayName": "lead_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "template_sent",
+              "displayName": "template_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "template_sent_at",
+              "displayName": "template_sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "last_contacted_at",
+              "displayName": "last_contacted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "next_followup_at",
+              "displayName": "next_followup_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "followup_count",
+              "displayName": "followup_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "contact_id",
+              "displayName": "contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        768,
+        32
+      ],
+      "id": "72f121d5-9458-4c87-8142-ad6752314b3c",
+      "name": "leads upsert",
+      "credentials": {
+        "postgres": {
+          "id": "FNEd08oziqN2ewYJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        -96
+      ],
+      "id": "34f65da9-0fc3-4119-983e-1b55cb712485",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1O0Otkd4BrcRtSurbCupcVbbYNHemYCAug__E3XIKE-g",
+          "mode": "list",
+          "cachedResultName": "old-leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1O0Otkd4BrcRtSurbCupcVbbYNHemYCAug__E3XIKE-g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1316105867,
+          "mode": "list",
+          "cachedResultName": "Dec",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1O0Otkd4BrcRtSurbCupcVbbYNHemYCAug__E3XIKE-g/edit#gid=1316105867"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "wamid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -304,
+        -96
+      ],
+      "id": "9964b41f-3523-490f-840b-0cafb31f18cc",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6mqis9ZMtoqOOOKv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "={{ $json.phone }}",
+        "template": "banquet_ads_|en",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json.name }}"
+                  },
+                  {
+                    "text": "={{ $json.project_type }}"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "header",
+              "headerParameters": {
+                "parameter": [
+                  {
+                    "type": "image",
+                    "imageLink": "https://weinnovarch.com/images/bliss.jpeg"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "button",
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Starting Soon"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 1,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Need Consultation"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 2,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "Not Now"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        32
+      ],
+      "id": "04ea82ee-7e22-420f-ae05-e04964589755",
+      "name": "Send message and wait for response",
+      "webhookId": "b2521550-615d-438c-9502-41d47429905a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        176,
+        -32
+      ],
+      "id": "8fc1f696-9d6f-4bff-b6b7-385df7a60870",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        160
+      ],
+      "id": "4b69287a-e8f5-490b-a476-77ed6d494e8a",
+      "name": "Wait",
+      "webhookId": "e1418bac-8f3c-4c3a-97ea-30a8b7f9a7ba"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row3": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upsert into contacts": {
+      "main": [
+        [
+          {
+            "node": "leads upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "leads upsert": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "Create a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "upsert into contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c16b2533-e8b8-4f5a-bdd6-45b1b6e383a9",
+  "meta": {
+    "instanceId": "507a669a968cdb9724b0d83b289010a62a52df6200495e962b06d2f1d47c342e"
+  },
+  "id": "it3KgBFRZRHazPZA",
+  "tags": []
+}

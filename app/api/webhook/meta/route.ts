@@ -100,41 +100,45 @@ export async function POST(req: NextRequest) {
                 assignedUser: null,
               });
 
-              // Auto-send WhatsApp template based on form name
+              // Auto-send WhatsApp template — look up active rules from DB
               if (newLead.contactNumber) {
-                const formNameLower = (formData.name || '').toLowerCase();
+                void (async () => {
+                  try {
+                    const formNameLower = (formData.name || '').toLowerCase();
 
-                // Resort/hotel/farmhouse forms → resort_intro_message with {{1}} = customer name
-                const resortKeywords = (process.env.WHATSAPP_RESORT_TEMPLATE_FORMS || 'bliss glass house')
-                  .split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+                    // Find first matching active rule
+                    const rules = await prisma.whatsAppTemplateRule.findMany({
+                      where: { isActive: true },
+                      orderBy: { createdAt: 'asc' },
+                    });
+                    const matchedRule = rules.find((r: { formKeyword: string }) => formNameLower.includes(r.formKeyword));
 
-                let templateToSend: string | null = null;
-                let templateComponents: object[] | undefined;
+                    let templateToSend: string | null = null;
+                    let templateLanguage = 'en';
+                    let templateComponents: object[] | undefined;
 
-                if (resortKeywords.some((kw: string) => formNameLower.includes(kw))) {
-                  templateToSend = process.env.WHATSAPP_RESORT_TEMPLATE || 'resort_intro_message';
-                  const videoId = process.env.WHATSAPP_RESORT_VIDEO_ID;
-                  templateComponents = [
-                    ...(videoId ? [{
-                      type: 'header',
-                      parameters: [{ type: 'video', video: { id: videoId } }],
-                    }] : []),
-                    {
-                      type: 'body',
-                      parameters: [{ type: 'text', text: newLead.customerName }],
-                    },
-                  ];
-                } else if (process.env.WHATSAPP_AUTO_TEMPLATE) {
-                  templateToSend = process.env.WHATSAPP_AUTO_TEMPLATE;
-                }
+                    if (matchedRule) {
+                      templateToSend = matchedRule.templateName;
+                      templateLanguage = matchedRule.language;
+                      templateComponents = [
+                        ...(matchedRule.videoId ? [{
+                          type: 'header',
+                          parameters: [{ type: 'video', video: { id: matchedRule.videoId } }],
+                        }] : []),
+                        {
+                          type: 'body',
+                          parameters: [{ type: 'text', text: newLead.customerName }],
+                        },
+                      ];
+                    } else if (process.env.WHATSAPP_AUTO_TEMPLATE) {
+                      templateToSend = process.env.WHATSAPP_AUTO_TEMPLATE;
+                    }
 
-                if (templateToSend) {
-                  void (async () => {
-                    try {
+                    if (templateToSend) {
                       const apiRes = await sendWhatsAppTemplate(
                         newLead.contactNumber,
-                        templateToSend!,
-                        'en',
+                        templateToSend,
+                        templateLanguage,
                         templateComponents
                       );
                       if (!apiRes.error) {
@@ -146,7 +150,7 @@ export async function POST(req: NextRequest) {
                             toNumber: normalizePhone(newLead.contactNumber),
                             direction: 'outbound',
                             messageType: 'template',
-                            templateName: templateToSend!,
+                            templateName: templateToSend,
                             status: 'sent',
                             sentAt: new Date(),
                           },
@@ -154,11 +158,11 @@ export async function POST(req: NextRequest) {
                       } else {
                         console.error('Auto WhatsApp template error:', apiRes.error);
                       }
-                    } catch (e) {
-                      console.error('Auto WhatsApp template send failed:', e);
                     }
-                  })();
-                }
+                  } catch (e) {
+                    console.error('Auto WhatsApp template send failed:', e);
+                  }
+                })();
               }
             }
           }

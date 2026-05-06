@@ -1,0 +1,202 @@
+{
+  "name": "for-sending-message-manually",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "3bf1285b-8a3c-411f-a1be-4a57000d6a16",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "b25dc5fc-8d5d-46f9-9810-4146b985072e",
+      "name": "Webhook",
+      "webhookId": "3bf1285b-8a3c-411f-a1be-4a57000d6a16"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "946716488530630",
+        "recipientPhoneNumber": "={{ $json.body.to }}",
+        "textBody": "={{ $json.body.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        16
+      ],
+      "id": "2d6b998c-c102-4d32-9c19-9335ee20dc28",
+      "name": "Send message",
+      "webhookId": "78808726-8a1f-4924-bd52-d15f985147fe",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jZECJ7LHGtZAky8y",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "wamid",
+              "fieldValue": "={{ $json.messages[0].id }}"
+            },
+            {
+              "fieldId": "from_number",
+              "fieldValue": "917011219741"
+            },
+            {
+              "fieldId": "to_number",
+              "fieldValue": "={{ $json.contacts[0].input }}"
+            },
+            {
+              "fieldId": "direction",
+              "fieldValue": "outbound"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "text"
+            },
+            {
+              "fieldId": "message_body",
+              "fieldValue": "={{ $('Webhook').item.json.body.message }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "sent"
+            },
+            {
+              "fieldId": "sent_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        16
+      ],
+      "id": "79b87465-8e7f-45bf-90ef-a65c57286e4e",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "HSWWgMoeUxcppRaV",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.weinnovarch.com",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+            "content-length": "90",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8,hi;q=0.7",
+            "content-type": "application/json",
+            "origin": "http://localhost:5173",
+            "priority": "u=1, i",
+            "referer": "http://localhost:5173/",
+            "sec-ch-ua": "\"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"144\", \"Google Chrome\";v=\"144\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "103.67.19.51",
+            "x-forwarded-host": "n8n.weinnovarch.com",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "63a473d2b930",
+            "x-real-ip": "103.67.19.51"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "to": "918178262805",
+            "message": "hello",
+            "contactId": "e1131ef7-9384-4c99-a973-e0950cee38c5"
+          },
+          "webhookUrl": "https://n8n.weinnovarch.com/webhook/3bf1285b-8a3c-411f-a1be-4a57000d6a16",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Send message": [
+      {
+        "json": {
+          "messaging_product": "whatsapp",
+          "contacts": [
+            {
+              "input": "918178262805",
+              "wa_id": "918178262805"
+            }
+          ],
+          "messages": [
+            {
+              "id": "wamid.HBgMOTE4MTc4MjYyODA1FQIAERgSOUZENUYyRDI0Q0JGMTAwRDlDAA=="
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e637cdab-2496-4e59-91e8-bceefda48bae",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "507a669a968cdb9724b0d83b289010a62a52df6200495e962b06d2f1d47c342e"
+  },
+  "id": "xnSuCxzV8oQgJ1cF",
+  "tags": []
+}
