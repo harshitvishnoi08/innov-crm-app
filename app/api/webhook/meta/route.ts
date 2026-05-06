@@ -125,17 +125,45 @@ export async function POST(req: NextRequest) {
                       } as typeof rules[0]);
                     }
 
+                    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://innov-crm-app-puce.vercel.app';
+
                     for (const rule of matchedRules) {
-                      const templateComponents: object[] = [
-                        ...(rule.videoId ? [{
-                          type: 'header',
-                          parameters: [{ type: 'video', video: { id: rule.videoId } }],
-                        }] : []),
-                        {
-                          type: 'body',
-                          parameters: [{ type: 'text', text: newLead.customerName }],
-                        },
-                      ];
+                      // Notification rules (notifyNumber set) get full lead details + URL button
+                      // Lead intro rules get customer name + optional video header
+                      const isNotification = !!rule.notifyNumber;
+
+                      const templateComponents: object[] = isNotification
+                        ? [
+                            {
+                              type: 'body',
+                              parameters: [
+                                { type: 'text', text: newLead.customerName },
+                                { type: 'text', text: newLead.contactNumber || '-' },
+                                { type: 'text', text: newLead.propertyType || '-' },
+                                { type: 'text', text: newLead.budgetRange || '-' },
+                                { type: 'text', text: newLead.city || '-' },
+                                { type: 'text', text: newLead.leadSource || 'Meta Ads' },
+                              ],
+                            },
+                            {
+                              type: 'button',
+                              sub_type: 'url',
+                              index: '0',
+                              parameters: [
+                                { type: 'text', text: `${appUrl}/admin/leads/${newLead.id}` },
+                              ],
+                            },
+                          ]
+                        : [
+                            ...(rule.videoId ? [{
+                              type: 'header',
+                              parameters: [{ type: 'video', video: { id: rule.videoId } }],
+                            }] : []),
+                            {
+                              type: 'body',
+                              parameters: [{ type: 'text', text: newLead.customerName }],
+                            },
+                          ];
 
                       // Send to fixed notify numbers (internal) or lead's own number
                       const targetNumbers = rule.notifyNumber
