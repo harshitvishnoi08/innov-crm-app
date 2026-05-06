@@ -111,7 +111,9 @@ export async function POST(req: NextRequest) {
                       where: { isActive: true },
                       orderBy: { createdAt: 'asc' },
                     });
-                    const matchedRule = rules.find((r: { formKeyword: string }) => formNameLower.includes(r.formKeyword));
+                    const matchedRule = rules.find((r: { formKeyword: string }) =>
+                      r.formKeyword.split('||').some(kw => formNameLower.includes(kw.trim()))
+                    );
 
                     let templateToSend: string | null = null;
                     let templateLanguage = 'en';

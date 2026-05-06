@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight,
   MessageSquare, Zap, RefreshCw, Video, Rows3,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Check, ChevronsUpDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +37,7 @@ type MetaTemplate = {
 };
 
 const PRAYAGRAJ_VIDEO_ID = '860392389677081';
+const KW_SEP = '||';
 
 type FacebookForm = { id: string; name: string; status: string; pageName?: string };
 
@@ -49,6 +50,123 @@ const emptyForm = {
   isActive: true,
 };
 
+// ── Multi-select dropdown ─────────────────────────────────────────────────────
+function FormMultiSelect({
+  forms,
+  selected,
+  onChange,
+  loading,
+}: {
+  forms: FacebookForm[];
+  selected: string[];
+  onChange: (v: string[]) => void;
+  loading: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  if (loading) return <div className="h-9 rounded-md bg-muted/50 animate-pulse" />;
+
+  // Fallback text input when FB forms not available
+  if (forms.length === 0) {
+    return (
+      <Input
+        placeholder="e.g. resort leads"
+        value={selected[0] ?? ''}
+        onChange={e => onChange(e.target.value ? [e.target.value] : [])}
+        required
+      />
+    );
+  }
+
+  const allSelected = selected.length === forms.length;
+  const toggle = (name: string) => {
+    const lower = name.toLowerCase();
+    onChange(selected.includes(lower) ? selected.filter(s => s !== lower) : [...selected, lower]);
+  };
+  const toggleAll = () => onChange(allSelected ? [] : forms.map(f => f.name.toLowerCase()));
+
+  const label =
+    selected.length === 0
+      ? 'Select forms…'
+      : selected.length === forms.length
+      ? 'All forms'
+      : selected.length === 1
+      ? forms.find(f => f.name.toLowerCase() === selected[0])?.name ?? selected[0]
+      : `${selected.length} forms selected`;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        <span className={selected.length === 0 ? 'text-muted-foreground' : ''}>{label}</span>
+        <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md max-h-56 overflow-y-auto">
+          {/* Select All */}
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent border-b font-medium"
+          >
+            <span className={`flex h-4 w-4 items-center justify-center rounded border ${allSelected ? 'bg-primary border-primary' : 'border-input'}`}>
+              {allSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+              {!allSelected && selected.length > 0 && <span className="h-0.5 w-2 bg-primary rounded" />}
+            </span>
+            Select All ({forms.length})
+          </button>
+          {forms.map(f => {
+            const val = f.name.toLowerCase();
+            const checked = selected.includes(val);
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => toggle(f.name)}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+              >
+                <span className={`flex h-4 w-4 items-center justify-center rounded border shrink-0 ${checked ? 'bg-primary border-primary' : 'border-input'}`}>
+                  {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+                </span>
+                <span className="truncate text-left">{f.name}</span>
+                {f.status !== 'ACTIVE' && (
+                  <span className="ml-auto text-[10px] text-muted-foreground shrink-0">({f.status})</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Selected badges */}
+      {selected.length > 0 && selected.length < forms.length && (
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {selected.map(s => (
+            <span key={s} className="inline-flex items-center gap-1 text-[11px] bg-muted px-2 py-0.5 rounded-full">
+              {forms.find(f => f.name.toLowerCase() === s)?.name ?? s}
+              <button type="button" onClick={() => onChange(selected.filter(x => x !== s))} className="text-muted-foreground hover:text-foreground">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Template Card ─────────────────────────────────────────────────────────────
 function TemplateCard({
   t,
   onCreateRule,
@@ -71,7 +189,6 @@ function TemplateCard({
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <CardContent className="p-0">
-        {/* Header bar */}
         <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
@@ -96,7 +213,6 @@ function TemplateCard({
           </div>
         </div>
 
-        {/* Expanded: buttons preview */}
         {expanded && buttons.length > 0 && (
           <div className="px-4 pb-2 flex flex-wrap gap-1.5">
             {buttons.map((b, i) => (
@@ -107,7 +223,6 @@ function TemplateCard({
           </div>
         )}
 
-        {/* Footer actions */}
         <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
           <button
             onClick={() => setExpanded(e => !e)}
@@ -130,11 +245,13 @@ function TemplateCard({
   );
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function WhatsAppPage() {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<TemplateRule | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [selectedForms, setSelectedForms] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'templates' | 'rules'>('templates');
 
@@ -182,6 +299,7 @@ export default function WhatsAppPage() {
 
   const openCreate = (prefillTemplate = '', prefillVideoRequired = false) => {
     setEditingRule(null);
+    setSelectedForms([]);
     setForm({
       ...emptyForm,
       templateName: prefillTemplate,
@@ -193,8 +311,15 @@ export default function WhatsAppPage() {
 
   const openEdit = (rule: TemplateRule) => {
     setEditingRule(rule);
+    const keywords = rule.formKeyword ? rule.formKeyword.split(KW_SEP).map(k => k.trim()).filter(Boolean) : [];
+    setSelectedForms(keywords);
     setForm({ name: rule.name, formKeyword: rule.formKeyword, templateName: rule.templateName, language: rule.language, videoId: rule.videoId || '', isActive: rule.isActive });
     setDialogOpen(true);
+  };
+
+  const handleFormsChange = (forms: string[]) => {
+    setSelectedForms(forms);
+    setForm(f => ({ ...f, formKeyword: forms.join(KW_SEP) }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -212,6 +337,9 @@ export default function WhatsAppPage() {
     setForm(f => ({ ...f, templateName: v, videoId: isVideo ? (f.videoId || PRAYAGRAJ_VIDEO_ID) : '' }));
   };
 
+  // Helper: parse stored formKeyword into display badges
+  const parseKeywords = (kw: string) => kw.split(KW_SEP).map(k => k.trim()).filter(Boolean);
+
   return (
     <div className="flex flex-col h-full">
       {/* Page Header */}
@@ -225,9 +353,16 @@ export default function WhatsAppPage() {
             {approvedTemplates.length} approved templates · {Array.isArray(rules) ? rules.filter(r => r.isActive).length : 0} active rules
           </p>
         </div>
-        <Button onClick={() => openCreate()} className="gap-2">
-          <Plus className="h-4 w-4" /> Add Rule
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" asChild>
+            <a href="https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=109117231998763&tab=message-templates&filters=%7B%22date_range%22%3A7%2C%22language%22%3A[]%2C%22quality%22%3A[]%2C%22search_text%22%3A%22%22%2C%22status%22%3A[%22APPROVED%22%2C%22IN_APPEAL%22%2C%22PAUSED%22%2C%22PENDING%22%2C%22REJECTED%22]%2C%22tag%22%3A[]%7D&nav_ref=whatsapp_manager&asset_id=757676046966708" target="_blank" rel="noopener noreferrer">
+              <Plus className="h-4 w-4" /> Create Template
+            </a>
+          </Button>
+          <Button onClick={() => openCreate()} className="gap-2">
+            <Plus className="h-4 w-4" /> Add Rule
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -302,39 +437,46 @@ export default function WhatsAppPage() {
                 </Button>
               </div>
             ) : (
-              rules.map((rule: TemplateRule) => (
-                <Card key={rule.id} className={`transition-opacity ${rule.isActive ? '' : 'opacity-55'}`}>
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                      <div>
-                        <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Rule</p>
-                        <p className="font-medium truncate">{rule.name}</p>
+              rules.map((rule: TemplateRule) => {
+                const keywords = parseKeywords(rule.formKeyword);
+                return (
+                  <Card key={rule.id} className={`transition-opacity ${rule.isActive ? '' : 'opacity-55'}`}>
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Rule</p>
+                          <p className="font-medium truncate">{rule.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-1">Forms</p>
+                          <div className="flex flex-wrap gap-1">
+                            {keywords.map(k => (
+                              <code key={k} className="text-[11px] bg-muted px-1.5 py-0.5 rounded">{k}</code>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Template</p>
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{rule.templateName}</code>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Form keyword</p>
-                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{rule.formKeyword}</code>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={() => updateRule.mutate({ id: rule.id, data: { isActive: !rule.isActive } })} title={rule.isActive ? 'Deactivate' : 'Activate'}>
+                          {rule.isActive
+                            ? <ToggleRight className="h-5 w-5 text-green-500" />
+                            : <ToggleLeft className="h-5 w-5 text-muted-foreground" />}
+                        </button>
+                        <button onClick={() => openEdit(rule)} className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => setDeleteId(rule.id)} className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Template</p>
-                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{rule.templateName}</code>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => updateRule.mutate({ id: rule.id, data: { isActive: !rule.isActive } })} title={rule.isActive ? 'Deactivate' : 'Activate'}>
-                        {rule.isActive
-                          ? <ToggleRight className="h-5 w-5 text-green-500" />
-                          : <ToggleLeft className="h-5 w-5 text-muted-foreground" />}
-                      </button>
-                      <button onClick={() => openEdit(rule)} className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors">
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => setDeleteId(rule.id)} className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         )}
@@ -353,37 +495,14 @@ export default function WhatsAppPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Facebook Form</Label>
-              {fbFormsLoading ? (
-                <div className="h-9 rounded-md bg-muted/50 animate-pulse" />
-              ) : fbForms.length > 0 ? (
-                <Select
-                  value={form.formKeyword}
-                  onValueChange={v => setForm(f => ({ ...f, formKeyword: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a Facebook form" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fbForms.map(f => (
-                      <SelectItem key={f.id} value={f.name.toLowerCase()}>
-                        <span className="text-sm">{f.name}</span>
-                        {f.status !== 'ACTIVE' && (
-                          <span className="ml-2 text-xs text-muted-foreground">({f.status})</span>
-                        )}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  placeholder="e.g. resort leads"
-                  value={form.formKeyword}
-                  onChange={e => setForm(f => ({ ...f, formKeyword: e.target.value }))}
-                  required
-                />
-              )}
-              <p className="text-xs text-muted-foreground">Rule triggers when a lead comes from this form.</p>
+              <Label>Facebook Forms</Label>
+              <FormMultiSelect
+                forms={fbForms}
+                selected={selectedForms}
+                onChange={handleFormsChange}
+                loading={fbFormsLoading}
+              />
+              <p className="text-xs text-muted-foreground">Rule triggers when a lead comes from any selected form.</p>
             </div>
 
             <div className="space-y-1.5">
