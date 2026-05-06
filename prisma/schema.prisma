@@ -264,15 +264,16 @@ model LeadActivity {
 }
 
 model WhatsAppTemplateRule {
-  id           String   @id @default(cuid())
-  name         String
-  formKeyword  String
-  templateName String
-  language     String   @default("en")
-  videoId      String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now()) @db.Timestamptz
-  updatedAt    DateTime @updatedAt @db.Timestamptz
+  id             String   @id @default(cuid())
+  name           String
+  formKeyword    String
+  templateName   String
+  language       String   @default("en")
+  videoId        String?
+  notifyNumber   String?  // if set, sends to this fixed number instead of the lead's number
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now()) @db.Timestamptz
+  updatedAt      DateTime @updatedAt @db.Timestamptz
 
   @@map("whatsapp_template_rules")
 }

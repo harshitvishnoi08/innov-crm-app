@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight,
   MessageSquare, Zap, RefreshCw, Video, Rows3,
-  ChevronDown, ChevronUp, Check, ChevronsUpDown,
+  ChevronDown, ChevronUp, Check, ChevronsUpDown, User, Phone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ type TemplateRule = {
   templateName: string;
   language: string;
   videoId: string | null;
+  notifyNumber: string | null;
   isActive: boolean;
   createdAt: string;
 };
@@ -47,6 +48,7 @@ const emptyForm = {
   templateName: '',
   language: 'en',
   videoId: '',
+  notifyNumber: '',
   isActive: true,
 };
 
@@ -245,6 +247,87 @@ function TemplateCard({
   );
 }
 
+// ── Rule Card ─────────────────────────────────────────────────────────────────
+const FORMS_PREVIEW = 2;
+
+function RuleCard({ rule, keywords, onToggle, onEdit, onDelete }: {
+  rule: TemplateRule;
+  keywords: string[];
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? keywords : keywords.slice(0, FORMS_PREVIEW);
+  const extra = keywords.length - FORMS_PREVIEW;
+
+  return (
+    <Card className={`transition-opacity ${rule.isActive ? '' : 'opacity-55'}`}>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-4 gap-2 text-sm">
+          <div>
+            <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Rule</p>
+            <p className="font-medium truncate">{rule.name}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-1">Forms</p>
+            <div className="flex flex-wrap gap-1">
+              {visible.map(k => (
+                <code key={k} className="text-[11px] bg-muted px-1.5 py-0.5 rounded">{k}</code>
+              ))}
+              {!showAll && extra > 0 && (
+                <button type="button" onClick={() => setShowAll(true)}
+                  className="text-[11px] text-primary underline underline-offset-2">
+                  +{extra} more
+                </button>
+              )}
+              {showAll && keywords.length > FORMS_PREVIEW && (
+                <button type="button" onClick={() => setShowAll(false)}
+                  className="text-[11px] text-muted-foreground underline underline-offset-2">
+                  show less
+                </button>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Template</p>
+            <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{rule.templateName}</code>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Send To</p>
+            {rule.notifyNumber ? (
+              <div className="flex flex-col gap-0.5">
+                {rule.notifyNumber.split('||').map(n => n.trim()).filter(Boolean).map(n => (
+                  <span key={n} className="inline-flex items-center gap-1 text-xs text-orange-500">
+                    <Phone className="h-3 w-3 shrink-0" />{n}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <User className="h-3 w-3" />Lead
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={onToggle} title={rule.isActive ? 'Deactivate' : 'Activate'}>
+            {rule.isActive
+              ? <ToggleRight className="h-5 w-5 text-green-500" />
+              : <ToggleLeft className="h-5 w-5 text-muted-foreground" />}
+          </button>
+          <button onClick={onEdit} className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors">
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button onClick={onDelete} className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function WhatsAppPage() {
   const qc = useQueryClient();
@@ -252,6 +335,7 @@ export default function WhatsAppPage() {
   const [editingRule, setEditingRule] = useState<TemplateRule | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [selectedForms, setSelectedForms] = useState<string[]>([]);
+  const [notifyNumbers, setNotifyNumbers] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'templates' | 'rules'>('templates');
 
@@ -300,6 +384,7 @@ export default function WhatsAppPage() {
   const openCreate = (prefillTemplate = '', prefillVideoRequired = false) => {
     setEditingRule(null);
     setSelectedForms([]);
+    setNotifyNumbers([]);
     setForm({
       ...emptyForm,
       templateName: prefillTemplate,
@@ -313,8 +398,15 @@ export default function WhatsAppPage() {
     setEditingRule(rule);
     const keywords = rule.formKeyword ? rule.formKeyword.split(KW_SEP).map(k => k.trim()).filter(Boolean) : [];
     setSelectedForms(keywords);
-    setForm({ name: rule.name, formKeyword: rule.formKeyword, templateName: rule.templateName, language: rule.language, videoId: rule.videoId || '', isActive: rule.isActive });
+    const nums = rule.notifyNumber ? rule.notifyNumber.split(KW_SEP).map(n => n.trim()).filter(Boolean) : [];
+    setNotifyNumbers(nums);
+    setForm({ name: rule.name, formKeyword: rule.formKeyword, templateName: rule.templateName, language: rule.language, videoId: rule.videoId || '', notifyNumber: rule.notifyNumber || '', isActive: rule.isActive });
     setDialogOpen(true);
+  };
+
+  const updateNotifyNumbers = (nums: string[]) => {
+    setNotifyNumbers(nums);
+    setForm(f => ({ ...f, notifyNumber: nums.filter(Boolean).join(KW_SEP) }));
   };
 
   const handleFormsChange = (forms: string[]) => {
@@ -440,41 +532,14 @@ export default function WhatsAppPage() {
               rules.map((rule: TemplateRule) => {
                 const keywords = parseKeywords(rule.formKeyword);
                 return (
-                  <Card key={rule.id} className={`transition-opacity ${rule.isActive ? '' : 'opacity-55'}`}>
-                    <CardContent className="flex items-center gap-4 p-4">
-                      <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                        <div>
-                          <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Rule</p>
-                          <p className="font-medium truncate">{rule.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-1">Forms</p>
-                          <div className="flex flex-wrap gap-1">
-                            {keywords.map(k => (
-                              <code key={k} className="text-[11px] bg-muted px-1.5 py-0.5 rounded">{k}</code>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase font-semibold text-muted-foreground mb-0.5">Template</p>
-                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{rule.templateName}</code>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => updateRule.mutate({ id: rule.id, data: { isActive: !rule.isActive } })} title={rule.isActive ? 'Deactivate' : 'Activate'}>
-                          {rule.isActive
-                            ? <ToggleRight className="h-5 w-5 text-green-500" />
-                            : <ToggleLeft className="h-5 w-5 text-muted-foreground" />}
-                        </button>
-                        <button onClick={() => openEdit(rule)} className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => setDeleteId(rule.id)} className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <RuleCard
+                    key={rule.id}
+                    rule={rule}
+                    keywords={keywords}
+                    onToggle={() => updateRule.mutate({ id: rule.id, data: { isActive: !rule.isActive } })}
+                    onEdit={() => openEdit(rule)}
+                    onDelete={() => setDeleteId(rule.id)}
+                  />
                 );
               })
             )}
@@ -549,6 +614,61 @@ export default function WhatsAppPage() {
                 )}
               </div>
             )}
+
+            {/* Send To */}
+            <div className="space-y-2">
+              <Label>Send To</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setNotifyNumbers([]); setForm(f => ({ ...f, notifyNumber: '' })); }}
+                  className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-colors ${notifyNumbers.length === 0 ? 'border-primary bg-primary/5 text-primary' : 'border-input text-muted-foreground hover:border-muted-foreground'}`}
+                >
+                  <User className="h-4 w-4 shrink-0" />
+                  <span className="font-medium">Lead&apos;s number</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (notifyNumbers.length === 0) updateNotifyNumbers(['918178262805']); }}
+                  className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-colors ${notifyNumbers.length > 0 ? 'border-primary bg-primary/5 text-primary' : 'border-input text-muted-foreground hover:border-muted-foreground'}`}
+                >
+                  <Phone className="h-4 w-4 shrink-0" />
+                  <span className="font-medium">Fixed number</span>
+                </button>
+              </div>
+              {notifyNumbers.length > 0 && (
+                <div className="space-y-2">
+                  {notifyNumbers.map((num, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        placeholder="e.g. 918178262805"
+                        value={num}
+                        onChange={e => {
+                          const updated = [...notifyNumbers];
+                          updated[i] = e.target.value;
+                          updateNotifyNumbers(updated);
+                        }}
+                        className="flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateNotifyNumbers(notifyNumbers.filter((_, j) => j !== i))}
+                        className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => updateNotifyNumbers([...notifyNumbers, ''])}
+                    className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add another number
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3">
               <p className="text-sm font-medium">Active</p>

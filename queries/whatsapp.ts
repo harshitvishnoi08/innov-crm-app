@@ -48,7 +48,8 @@ export function useWhatsAppMessages(leadId: string) {
     queryKey: waQueryKeys.messages(leadId),
     queryFn: () => fetchMessages(leadId),
     enabled: !!leadId,
-    refetchInterval: 15_000, // poll every 15s for new inbound messages
+    refetchInterval: 10_000,          // poll every 10s for new inbound messages
+    refetchIntervalInBackground: false, // stop polling when tab is not active
     staleTime: 5_000,
   });
 }

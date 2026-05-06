@@ -137,28 +137,35 @@ export async function POST(req: NextRequest) {
                     }
 
                     if (templateToSend) {
-                      const apiRes = await sendWhatsAppTemplate(
-                        newLead.contactNumber,
-                        templateToSend,
-                        templateLanguage,
-                        templateComponents
-                      );
-                      if (!apiRes.error) {
-                        await prisma.whatsAppMessage.create({
-                          data: {
-                            leadId: newLead.id,
-                            wamid: apiRes.messages?.[0]?.id ?? null,
-                            fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
-                            toNumber: normalizePhone(newLead.contactNumber),
-                            direction: 'outbound',
-                            messageType: 'template',
-                            templateName: templateToSend,
-                            status: 'sent',
-                            sentAt: new Date(),
-                          },
-                        });
-                      } else {
-                        console.error('Auto WhatsApp template error:', apiRes.error);
+                      // Build target list: fixed notify numbers (internal) or lead's own number
+                      const targetNumbers = matchedRule?.notifyNumber
+                        ? matchedRule.notifyNumber.split('||').map((n: string) => n.trim()).filter(Boolean)
+                        : [newLead.contactNumber];
+
+                      for (const targetNumber of targetNumbers) {
+                        const apiRes = await sendWhatsAppTemplate(
+                          targetNumber,
+                          templateToSend,
+                          templateLanguage,
+                          templateComponents
+                        );
+                        if (!apiRes.error) {
+                          await prisma.whatsAppMessage.create({
+                            data: {
+                              leadId: newLead.id,
+                              wamid: apiRes.messages?.[0]?.id ?? null,
+                              fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
+                              toNumber: normalizePhone(targetNumber),
+                              direction: 'outbound',
+                              messageType: 'template',
+                              templateName: templateToSend,
+                              status: 'sent',
+                              sentAt: new Date(),
+                            },
+                          });
+                        } else {
+                          console.error('Auto WhatsApp template error for', targetNumber, ':', apiRes.error);
+                        }
                       }
                     }
                   } catch (e) {

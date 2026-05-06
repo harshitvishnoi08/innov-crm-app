@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
-  const { name, formKeyword, templateName, language, videoId, isActive } = body;
+  const { name, formKeyword, templateName, language, videoId, notifyNumber, isActive } = body;
 
   if (!name || !formKeyword || !templateName) {
     return NextResponse.json({ error: 'name, formKeyword and templateName are required' }, { status: 400 });
@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       templateName,
       language: language || 'en',
       videoId: videoId || null,
+      notifyNumber: notifyNumber || null,
       isActive: isActive ?? true,
     },
   });

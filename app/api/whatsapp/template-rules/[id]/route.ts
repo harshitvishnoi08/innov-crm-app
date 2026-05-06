@@ -9,7 +9,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
   const body = await req.json();
-  const { name, formKeyword, templateName, language, videoId, isActive } = body;
+  const { name, formKeyword, templateName, language, videoId, notifyNumber, isActive } = body;
 
   const rule = await prisma.whatsAppTemplateRule.update({
     where: { id },
@@ -19,6 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       ...(templateName !== undefined && { templateName }),
       ...(language !== undefined && { language }),
       ...(videoId !== undefined && { videoId: videoId || null }),
+      ...(notifyNumber !== undefined && { notifyNumber: notifyNumber || null }),
       ...(isActive !== undefined && { isActive }),
     },
   });
