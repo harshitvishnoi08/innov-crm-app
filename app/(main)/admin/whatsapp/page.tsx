@@ -36,6 +36,10 @@ type MetaTemplate = {
   components: { type: string; format?: string; text?: string; buttons?: { text: string }[] }[];
 };
 
+const PRAYAGRAJ_VIDEO_ID = '860392389677081';
+
+type FacebookForm = { id: string; name: string; status: string; pageName?: string };
+
 const emptyForm = {
   name: '',
   formKeyword: '',
@@ -139,6 +143,13 @@ export default function WhatsAppPage() {
     queryFn: () => fetch('/api/whatsapp/template-rules').then(r => r.json()),
   });
 
+  const { data: fbFormsRaw, isLoading: fbFormsLoading } = useQuery({
+    queryKey: ['whatsapp-facebook-forms'],
+    queryFn: () => fetch('/api/whatsapp/facebook-forms').then(r => r.json()),
+    staleTime: 5 * 60 * 1000,
+  });
+  const fbForms: FacebookForm[] = Array.isArray(fbFormsRaw) ? fbFormsRaw : [];
+
   const { data: metaTemplatesRaw, isLoading: templatesLoading, refetch: refetchTemplates } = useQuery({
     queryKey: ['whatsapp-meta-templates'],
     queryFn: () => fetch('/api/whatsapp/meta-templates').then(r => r.json()),
@@ -175,7 +186,7 @@ export default function WhatsAppPage() {
       ...emptyForm,
       templateName: prefillTemplate,
       name: prefillTemplate ? `${prefillTemplate} rule` : '',
-      videoId: prefillVideoRequired ? '' : '',
+      videoId: prefillVideoRequired ? PRAYAGRAJ_VIDEO_ID : '',
     });
     setDialogOpen(true);
   };
@@ -194,6 +205,12 @@ export default function WhatsAppPage() {
 
   const selectedTemplateMeta = metaTemplates.find(t => t.name === form.templateName);
   const hasVideoHeader = selectedTemplateMeta?.components.some(c => c.type === 'HEADER' && c.format === 'VIDEO');
+
+  const handleTemplateChange = (v: string) => {
+    const tmpl = metaTemplates.find(t => t.name === v);
+    const isVideo = tmpl?.components.some(c => c.type === 'HEADER' && c.format === 'VIDEO') ?? false;
+    setForm(f => ({ ...f, templateName: v, videoId: isVideo ? (f.videoId || PRAYAGRAJ_VIDEO_ID) : '' }));
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -336,15 +353,43 @@ export default function WhatsAppPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Form Name Keyword <span className="text-muted-foreground font-normal">(case-insensitive)</span></Label>
-              <Input placeholder="e.g. bliss glass house" value={form.formKeyword} onChange={e => setForm(f => ({ ...f, formKeyword: e.target.value }))} required />
-              <p className="text-xs text-muted-foreground">If the Meta form name contains this text, this rule triggers.</p>
+              <Label>Facebook Form</Label>
+              {fbFormsLoading ? (
+                <div className="h-9 rounded-md bg-muted/50 animate-pulse" />
+              ) : fbForms.length > 0 ? (
+                <Select
+                  value={form.formKeyword}
+                  onValueChange={v => setForm(f => ({ ...f, formKeyword: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a Facebook form" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fbForms.map(f => (
+                      <SelectItem key={f.id} value={f.name.toLowerCase()}>
+                        <span className="text-sm">{f.name}</span>
+                        {f.status !== 'ACTIVE' && (
+                          <span className="ml-2 text-xs text-muted-foreground">({f.status})</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  placeholder="e.g. resort leads"
+                  value={form.formKeyword}
+                  onChange={e => setForm(f => ({ ...f, formKeyword: e.target.value }))}
+                  required
+                />
+              )}
+              <p className="text-xs text-muted-foreground">Rule triggers when a lead comes from this form.</p>
             </div>
 
             <div className="space-y-1.5">
               <Label>Template</Label>
               {approvedTemplates.length > 0 ? (
-                <Select value={form.templateName} onValueChange={v => setForm(f => ({ ...f, templateName: v }))}>
+                <Select value={form.templateName} onValueChange={handleTemplateChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select approved template" />
                   </SelectTrigger>
@@ -364,8 +409,25 @@ export default function WhatsAppPage() {
 
             {hasVideoHeader && (
               <div className="space-y-1.5">
-                <Label>Video Media ID <span className="text-orange-500 text-xs">(template has video header)</span></Label>
-                <Input placeholder="e.g. 860392389677081" value={form.videoId} onChange={e => setForm(f => ({ ...f, videoId: e.target.value }))} />
+                <Label className="flex items-center gap-2">
+                  Video Media ID
+                  <span className="text-orange-500 text-xs font-normal">(template has video header)</span>
+                </Label>
+                <Input value={form.videoId} onChange={e => setForm(f => ({ ...f, videoId: e.target.value }))} />
+                {form.videoId === PRAYAGRAJ_VIDEO_ID && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Video className="h-3 w-3 text-orange-500" /> Prayagraj Resort Video
+                  </p>
+                )}
+                {!form.videoId && (
+                  <button
+                    type="button"
+                    className="text-xs text-primary underline underline-offset-2"
+                    onClick={() => setForm(f => ({ ...f, videoId: PRAYAGRAJ_VIDEO_ID }))}
+                  >
+                    Use Prayagraj Resort Video
+                  </button>
+                )}
               </div>
             )}
 
