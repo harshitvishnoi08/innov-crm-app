@@ -106,47 +106,47 @@ export async function POST(req: NextRequest) {
                   try {
                     const formNameLower = (formData.name || '').toLowerCase();
 
-                    // Find first matching active rule
+                    // Find ALL matching active rules (not just the first)
                     const rules = await prisma.whatsAppTemplateRule.findMany({
                       where: { isActive: true },
                       orderBy: { createdAt: 'asc' },
                     });
-                    const matchedRule = rules.find((r: { formKeyword: string }) =>
+                    const matchedRules = rules.filter((r: { formKeyword: string }) =>
                       r.formKeyword.split('||').some(kw => formNameLower.includes(kw.trim()))
                     );
 
-                    let templateToSend: string | null = null;
-                    let templateLanguage = 'en';
-                    let templateComponents: object[] | undefined;
+                    // Fallback to env var if no rules matched
+                    if (matchedRules.length === 0 && process.env.WHATSAPP_AUTO_TEMPLATE) {
+                      matchedRules.push({
+                        templateName: process.env.WHATSAPP_AUTO_TEMPLATE,
+                        language: 'en',
+                        videoId: null,
+                        notifyNumber: null,
+                      } as typeof rules[0]);
+                    }
 
-                    if (matchedRule) {
-                      templateToSend = matchedRule.templateName;
-                      templateLanguage = matchedRule.language;
-                      templateComponents = [
-                        ...(matchedRule.videoId ? [{
+                    for (const rule of matchedRules) {
+                      const templateComponents: object[] = [
+                        ...(rule.videoId ? [{
                           type: 'header',
-                          parameters: [{ type: 'video', video: { id: matchedRule.videoId } }],
+                          parameters: [{ type: 'video', video: { id: rule.videoId } }],
                         }] : []),
                         {
                           type: 'body',
                           parameters: [{ type: 'text', text: newLead.customerName }],
                         },
                       ];
-                    } else if (process.env.WHATSAPP_AUTO_TEMPLATE) {
-                      templateToSend = process.env.WHATSAPP_AUTO_TEMPLATE;
-                    }
 
-                    if (templateToSend) {
-                      // Build target list: fixed notify numbers (internal) or lead's own number
-                      const targetNumbers = matchedRule?.notifyNumber
-                        ? matchedRule.notifyNumber.split('||').map((n: string) => n.trim()).filter(Boolean)
+                      // Send to fixed notify numbers (internal) or lead's own number
+                      const targetNumbers = rule.notifyNumber
+                        ? rule.notifyNumber.split('||').map((n: string) => n.trim()).filter(Boolean)
                         : [newLead.contactNumber];
 
                       for (const targetNumber of targetNumbers) {
                         const apiRes = await sendWhatsAppTemplate(
                           targetNumber,
-                          templateToSend,
-                          templateLanguage,
+                          rule.templateName,
+                          rule.language,
                           templateComponents
                         );
                         if (!apiRes.error) {
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
                               toNumber: normalizePhone(targetNumber),
                               direction: 'outbound',
                               messageType: 'template',
-                              templateName: templateToSend,
+                              templateName: rule.templateName,
                               status: 'sent',
                               sentAt: new Date(),
                             },
