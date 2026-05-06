@@ -72,23 +72,29 @@ export function WhatsAppChat({ leadId, contactNumber, customerName }: WhatsAppCh
   const { data: messages = [], isLoading, isError } = useWhatsAppMessages(leadId);
   const sendMessage = useSendWhatsAppMessage(leadId);
   const [input, setInput] = useState('');
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
 
-  // Auto-scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    const el = chatContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+
+  // Auto-scroll chat panel (not the page) when new messages arrive
   useEffect(() => {
     if (messages.length !== prevCountRef.current) {
       prevCountRef.current = messages.length;
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      scrollToBottom();
     }
   }, [messages.length]);
 
-  // Scroll to bottom on initial load
+  // Scroll to bottom on initial load only
   useEffect(() => {
     if (!isLoading && messages.length > 0) {
-      bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+      scrollToBottom();
     }
-  }, [isLoading, messages.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
 
   const handleSend = async () => {
     const text = input.trim();
@@ -135,7 +141,7 @@ export function WhatsAppChat({ leadId, contactNumber, customerName }: WhatsAppCh
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1 min-h-0">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 space-y-1 min-h-0">
         {isLoading && (
           <div className="flex items-center justify-center h-full">
             <p className="text-xs text-muted-foreground">Loading messages...</p>
@@ -210,7 +216,6 @@ export function WhatsAppChat({ leadId, contactNumber, customerName }: WhatsAppCh
           </div>
         ))}
 
-        <div ref={bottomRef} />
       </div>
 
       {/* Input */}
