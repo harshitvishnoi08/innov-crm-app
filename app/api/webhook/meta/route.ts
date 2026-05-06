@@ -100,31 +100,65 @@ export async function POST(req: NextRequest) {
                 assignedUser: null,
               });
 
-              // Auto-send WhatsApp welcome template if phone exists and template is configured
-              const autoTemplate = process.env.WHATSAPP_AUTO_TEMPLATE;
-              if (newLead.contactNumber && autoTemplate) {
-                void (async () => {
-                  try {
-                    const apiRes = await sendWhatsAppTemplate(newLead.contactNumber, autoTemplate);
-                    if (!apiRes.error) {
-                      await prisma.whatsAppMessage.create({
-                        data: {
-                          leadId: newLead.id,
-                          wamid: apiRes.messages?.[0]?.id ?? null,
-                          fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
-                          toNumber: normalizePhone(newLead.contactNumber),
-                          direction: 'outbound',
-                          messageType: 'template',
-                          templateName: autoTemplate,
-                          status: 'sent',
-                          sentAt: new Date(),
-                        },
-                      });
+              // Auto-send WhatsApp template based on form name
+              if (newLead.contactNumber) {
+                const formNameLower = (formData.name || '').toLowerCase();
+
+                // Resort/hotel/farmhouse forms → resort_intro_message with {{1}} = customer name
+                const resortKeywords = (process.env.WHATSAPP_RESORT_TEMPLATE_FORMS || 'bliss glass house')
+                  .split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+
+                let templateToSend: string | null = null;
+                let templateComponents: object[] | undefined;
+
+                if (resortKeywords.some((kw: string) => formNameLower.includes(kw))) {
+                  templateToSend = process.env.WHATSAPP_RESORT_TEMPLATE || 'resort_intro_message';
+                  const videoId = process.env.WHATSAPP_RESORT_VIDEO_ID;
+                  templateComponents = [
+                    ...(videoId ? [{
+                      type: 'header',
+                      parameters: [{ type: 'video', video: { id: videoId } }],
+                    }] : []),
+                    {
+                      type: 'body',
+                      parameters: [{ type: 'text', text: newLead.customerName }],
+                    },
+                  ];
+                } else if (process.env.WHATSAPP_AUTO_TEMPLATE) {
+                  templateToSend = process.env.WHATSAPP_AUTO_TEMPLATE;
+                }
+
+                if (templateToSend) {
+                  void (async () => {
+                    try {
+                      const apiRes = await sendWhatsAppTemplate(
+                        newLead.contactNumber,
+                        templateToSend!,
+                        'en',
+                        templateComponents
+                      );
+                      if (!apiRes.error) {
+                        await prisma.whatsAppMessage.create({
+                          data: {
+                            leadId: newLead.id,
+                            wamid: apiRes.messages?.[0]?.id ?? null,
+                            fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
+                            toNumber: normalizePhone(newLead.contactNumber),
+                            direction: 'outbound',
+                            messageType: 'template',
+                            templateName: templateToSend!,
+                            status: 'sent',
+                            sentAt: new Date(),
+                          },
+                        });
+                      } else {
+                        console.error('Auto WhatsApp template error:', apiRes.error);
+                      }
+                    } catch (e) {
+                      console.error('Auto WhatsApp template send failed:', e);
                     }
-                  } catch (e) {
-                    console.error('Auto WhatsApp template send failed:', e);
-                  }
-                })();
+                  })();
+                }
               }
             }
           }
