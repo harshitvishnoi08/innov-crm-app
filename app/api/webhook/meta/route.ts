@@ -100,108 +100,109 @@ export async function POST(req: NextRequest) {
                 assignedUser: null,
               });
 
-              // Auto-send WhatsApp template — look up active rules from DB
-              if (newLead.contactNumber) {
-                void (async () => {
-                  try {
-                    const formNameLower = (formData.name || '').toLowerCase();
+              // Auto-send WhatsApp templates — look up active rules from DB
+              // NOTE: run outside contact-number check so notification rules always fire
+              void (async () => {
+                try {
+                  const formNameLower = (formData.name || '').toLowerCase();
 
-                    // Find ALL matching active rules (not just the first)
-                    const rules = await prisma.whatsAppTemplateRule.findMany({
-                      where: { isActive: true },
-                      orderBy: { createdAt: 'asc' },
-                    });
-                    const matchedRules = rules.filter((r: { formKeyword: string }) =>
-                      r.formKeyword.split('||').some(kw => formNameLower.includes(kw.trim()))
-                    );
+                  // Find ALL matching active rules (not just the first)
+                  const rules = await prisma.whatsAppTemplateRule.findMany({
+                    where: { isActive: true },
+                    orderBy: { createdAt: 'asc' },
+                  });
+                  const matchedRules = rules.filter((r: { formKeyword: string }) =>
+                    r.formKeyword.split('||').some(kw => formNameLower.includes(kw.trim()))
+                  );
 
-                    // Fallback to env var if no rules matched
-                    if (matchedRules.length === 0 && process.env.WHATSAPP_AUTO_TEMPLATE) {
-                      matchedRules.push({
-                        templateName: process.env.WHATSAPP_AUTO_TEMPLATE,
-                        language: 'en',
-                        videoId: null,
-                        notifyNumber: null,
-                      } as typeof rules[0]);
-                    }
+                  // Fallback to env var if no rules matched
+                  if (matchedRules.length === 0 && process.env.WHATSAPP_AUTO_TEMPLATE) {
+                    matchedRules.push({
+                      templateName: process.env.WHATSAPP_AUTO_TEMPLATE,
+                      language: 'en',
+                      videoId: null,
+                      notifyNumber: null,
+                    } as typeof rules[0]);
+                  }
 
-                    for (const rule of matchedRules) {
-                      // Notification rules (notifyNumber set) get full lead details + URL button
-                      // Lead intro rules get customer name + optional video header
-                      const isNotification = !!rule.notifyNumber;
+                  for (const rule of matchedRules) {
+                    // Notification rules (notifyNumber set) get full lead details + URL button
+                    // Lead intro rules get customer name + optional video header
+                    const isNotification = !!rule.notifyNumber;
 
-                      const templateComponents: object[] = isNotification
-                        ? [
-                            {
-                              type: 'body',
-                              parameters: [
-                                { type: 'text', text: newLead.customerName },
-                                { type: 'text', text: newLead.contactNumber || '-' },
-                                { type: 'text', text: newLead.propertyType || '-' },
-                                { type: 'text', text: newLead.budgetRange || '-' },
-                                { type: 'text', text: newLead.city || '-' },
-                                { type: 'text', text: newLead.leadSource || 'Meta Ads' },
-                              ],
+                    // Lead intro rules require the lead to have a contact number
+                    if (!isNotification && !newLead.contactNumber) continue;
+
+                    const templateComponents: object[] = isNotification
+                      ? [
+                          {
+                            type: 'body',
+                            parameters: [
+                              { type: 'text', text: newLead.customerName },
+                              { type: 'text', text: newLead.contactNumber || '-' },
+                              { type: 'text', text: newLead.propertyType || '-' },
+                              { type: 'text', text: newLead.budgetRange || '-' },
+                              { type: 'text', text: newLead.city || '-' },
+                              { type: 'text', text: newLead.leadSource || 'Meta Ads' },
+                            ],
+                          },
+                          // URL button — {{1}} is replaced with the lead ID
+                          {
+                            type: 'button',
+                            sub_type: 'url',
+                            index: 0,
+                            parameters: [{ type: 'text', text: newLead.id }],
+                          },
+                        ]
+                      : [
+                          ...(rule.videoId ? [{
+                            type: 'header',
+                            parameters: [{ type: 'video', video: { id: rule.videoId } }],
+                          }] : []),
+                          {
+                            type: 'body',
+                            parameters: [{ type: 'text', text: newLead.customerName }],
+                          },
+                        ];
+
+                    // Send to fixed notify numbers (internal) or lead's own number
+                    const targetNumbers = rule.notifyNumber
+                      ? rule.notifyNumber.split('||').map((n: string) => n.trim()).filter(Boolean)
+                      : [newLead.contactNumber];
+
+                    for (const targetNumber of targetNumbers) {
+                      const apiRes = await sendWhatsAppTemplate(
+                        targetNumber,
+                        rule.templateName,
+                        rule.language,
+                        templateComponents
+                      );
+                      if (!apiRes.error) {
+                        // Only save to lead's chat if this went to the lead's own number
+                        if (!isNotification) {
+                          await prisma.whatsAppMessage.create({
+                            data: {
+                              leadId: newLead.id,
+                              wamid: apiRes.messages?.[0]?.id ?? null,
+                              fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
+                              toNumber: normalizePhone(targetNumber),
+                              direction: 'outbound',
+                              messageType: 'template',
+                              templateName: rule.templateName,
+                              status: 'sent',
+                              sentAt: new Date(),
                             },
-                            {
-                              type: 'button',
-                              sub_type: 'url',
-                              index: '0',
-                              parameters: [
-                                { type: 'text', text: newLead.id },
-                              ],
-                            },
-                          ]
-                        : [
-                            ...(rule.videoId ? [{
-                              type: 'header',
-                              parameters: [{ type: 'video', video: { id: rule.videoId } }],
-                            }] : []),
-                            {
-                              type: 'body',
-                              parameters: [{ type: 'text', text: newLead.customerName }],
-                            },
-                          ];
-
-                      // Send to fixed notify numbers (internal) or lead's own number
-                      const targetNumbers = rule.notifyNumber
-                        ? rule.notifyNumber.split('||').map((n: string) => n.trim()).filter(Boolean)
-                        : [newLead.contactNumber];
-
-                      for (const targetNumber of targetNumbers) {
-                        const apiRes = await sendWhatsAppTemplate(
-                          targetNumber,
-                          rule.templateName,
-                          rule.language,
-                          templateComponents
-                        );
-                        if (!apiRes.error) {
-                          // Only save to lead's chat if this went to the lead's own number
-                          if (!isNotification) {
-                            await prisma.whatsAppMessage.create({
-                              data: {
-                                leadId: newLead.id,
-                                wamid: apiRes.messages?.[0]?.id ?? null,
-                                fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
-                                toNumber: normalizePhone(targetNumber),
-                                direction: 'outbound',
-                                messageType: 'template',
-                                templateName: rule.templateName,
-                                status: 'sent',
-                                sentAt: new Date(),
-                              },
-                            });
-                          }
-                        } else {
-                          console.error('Auto WhatsApp template error for', targetNumber, ':', apiRes.error);
+                          });
                         }
+                      } else {
+                        console.error('Auto WhatsApp template error for', targetNumber, ':', JSON.stringify(apiRes.error));
                       }
                     }
-                  } catch (e) {
-                    console.error('Auto WhatsApp template send failed:', e);
                   }
-                })();
-              }
+                } catch (e) {
+                  console.error('Auto WhatsApp template send failed:', e);
+                }
+              })();
             }
           }
         }
