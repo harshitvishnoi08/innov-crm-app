@@ -125,8 +125,6 @@ export async function POST(req: NextRequest) {
                       } as typeof rules[0]);
                     }
 
-                    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://innov-crm-app-puce.vercel.app';
-
                     for (const rule of matchedRules) {
                       // Notification rules (notifyNumber set) get full lead details + URL button
                       // Lead intro rules get customer name + optional video header
@@ -150,7 +148,7 @@ export async function POST(req: NextRequest) {
                               sub_type: 'url',
                               index: '0',
                               parameters: [
-                                { type: 'text', text: `${appUrl}/admin/leads/${newLead.id}` },
+                                { type: 'text', text: newLead.id },
                               ],
                             },
                           ]
