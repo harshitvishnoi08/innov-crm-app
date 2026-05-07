@@ -176,19 +176,22 @@ export async function POST(req: NextRequest) {
                           templateComponents
                         );
                         if (!apiRes.error) {
-                          await prisma.whatsAppMessage.create({
-                            data: {
-                              leadId: newLead.id,
-                              wamid: apiRes.messages?.[0]?.id ?? null,
-                              fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
-                              toNumber: normalizePhone(targetNumber),
-                              direction: 'outbound',
-                              messageType: 'template',
-                              templateName: rule.templateName,
-                              status: 'sent',
-                              sentAt: new Date(),
-                            },
-                          });
+                          // Only save to lead's chat if this went to the lead's own number
+                          if (!isNotification) {
+                            await prisma.whatsAppMessage.create({
+                              data: {
+                                leadId: newLead.id,
+                                wamid: apiRes.messages?.[0]?.id ?? null,
+                                fromNumber: process.env.WHATSAPP_PHONE_NUMBER_ID!,
+                                toNumber: normalizePhone(targetNumber),
+                                direction: 'outbound',
+                                messageType: 'template',
+                                templateName: rule.templateName,
+                                status: 'sent',
+                                sentAt: new Date(),
+                              },
+                            });
+                          }
                         } else {
                           console.error('Auto WhatsApp template error for', targetNumber, ':', apiRes.error);
                         }
