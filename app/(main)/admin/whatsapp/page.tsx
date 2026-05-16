@@ -155,13 +155,18 @@ function FormMultiSelect({
 
       {/* Selected badges */}
       {selected.length > 0 && selected.length < forms.length && (
-        <div className="flex flex-wrap gap-1 mt-1.5">
-          {selected.map(s => (
-            <span key={s} className="inline-flex items-center gap-1 text-[11px] bg-muted px-2 py-0.5 rounded-full">
-              {forms.find(f => f.name.toLowerCase() === s)?.name ?? s}
-              <button type="button" onClick={() => onChange(selected.filter(x => x !== s))} className="text-muted-foreground hover:text-foreground">×</button>
-            </span>
-          ))}
+        <div className="mt-1.5 space-y-1">
+          <p className="text-[11px] text-muted-foreground">
+            {selected.length} form{selected.length === 1 ? '' : 's'} selected
+          </p>
+          <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto rounded-md border border-border/60 bg-muted/20 p-2">
+            {selected.map(s => (
+              <span key={s} className="inline-flex items-center gap-1 text-[11px] bg-muted px-2 py-0.5 rounded-full">
+                {forms.find(f => f.name.toLowerCase() === s)?.name ?? s}
+                <button type="button" onClick={() => onChange(selected.filter(x => x !== s))} className="text-muted-foreground hover:text-foreground">×</button>
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -549,11 +554,12 @@ export default function WhatsAppPage() {
 
       {/* ── Add/Edit Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[min(90vh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+          <DialogHeader className="shrink-0 border-b px-6 py-4">
             <DialogTitle>{editingRule ? 'Edit Rule' : 'Create Auto-send Rule'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 py-1">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
             <div className="space-y-1.5">
               <Label>Rule Name</Label>
               <Input placeholder="e.g. Resort Leads" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
@@ -674,8 +680,9 @@ export default function WhatsAppPage() {
               <p className="text-sm font-medium">Active</p>
               <Switch checked={form.isActive} onCheckedChange={v => setForm(f => ({ ...f, isActive: v }))} />
             </div>
+            </div>
 
-            <DialogFooter>
+            <DialogFooter className="shrink-0 border-t bg-background px-6 py-4">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createRule.isPending || updateRule.isPending}>
                 {editingRule ? 'Save' : 'Create Rule'}

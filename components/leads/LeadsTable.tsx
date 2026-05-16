@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Search, Plus, Trash2, ChevronRight, X, Download, Phone, ChevronLeft, CheckSquare } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
+import { WhatsAppLinkMenu } from '@/components/leads/WhatsAppLinkMenu';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
@@ -70,9 +70,16 @@ const ACTIVE_OPTIONS = [
   { value: 'HOLD', label: 'Hold' },
 ];
 
-function ContactButtons({ phone, size = 'md' }: { phone: string; size?: 'sm' | 'md' }) {
+function ContactButtons({
+  phone,
+  customerName,
+  size = 'md',
+}: {
+  phone: string;
+  customerName?: string | null;
+  size?: 'sm' | 'md';
+}) {
   const [confirmCall, setConfirmCall] = useState(false);
-  const clean = phone.replace(/\D/g, '');
   const btnCls = size === 'sm'
     ? 'rounded p-1 transition-colors active:scale-90 active:opacity-60'
     : 'rounded-lg p-1.5 transition-colors active:scale-90 active:opacity-60';
@@ -86,16 +93,12 @@ function ContactButtons({ phone, size = 'md' }: { phone: string; size?: 'sm' | '
       >
         <Phone className={size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
       </button>
-      <a
-        href={`https://wa.me/${clean}`}
-        target="_blank"
-        rel="noopener noreferrer"
+      <WhatsAppLinkMenu
+        phone={phone}
+        customerName={customerName}
+        size={size}
         onClick={e => e.stopPropagation()}
-        className={`${btnCls} text-muted-foreground hover:bg-green-500/10 hover:text-green-500`}
-        title="WhatsApp"
-      >
-        <WhatsAppIcon className={size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
-      </a>
+      />
       <Dialog open={confirmCall} onOpenChange={setConfirmCall}>
         <DialogContent className="max-w-xs">
           <DialogHeader>
@@ -620,7 +623,11 @@ export function LeadsTable() {
                           </span>
                           {(lead.contactNumber as string) && (
                             <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-                              <ContactButtons phone={lead.contactNumber as string} size="sm" />
+                              <ContactButtons
+                                phone={lead.contactNumber as string}
+                                customerName={lead.customerName as string}
+                                size="sm"
+                              />
                             </div>
                           )}
                         </div>
@@ -769,7 +776,11 @@ export function LeadsTable() {
                           <div className="flex items-center gap-0.5">
                             <span className="text-sm text-muted-foreground whitespace-nowrap mr-1">{(lead.contactNumber as string) || '—'}</span>
                             {(lead.contactNumber as string) && (
-                              <ContactButtons phone={lead.contactNumber as string} size="sm" />
+                              <ContactButtons
+                                phone={lead.contactNumber as string}
+                                customerName={lead.customerName as string}
+                                size="sm"
+                              />
                             )}
                           </div>
                         </TableCell>

@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Send, Calendar, X, UserPlus, Trash2, Phone, Pencil, MessageCircle } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
+import { WhatsAppLinkMenu } from '@/components/leads/WhatsAppLinkMenu';
 import { toast } from 'sonner';
 import { WhatsAppChat } from '@/components/leads/WhatsAppChat';
 
@@ -310,14 +311,11 @@ export function LeadDetail({ id }: { id: string }) {
                           >
                             <Phone className="h-3 w-3" /> Call
                           </button>
-                          <a
-                            href={`https://wa.me/${(lead.contactNumber as string).replace(/\D/g, '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 rounded-lg border border-green-500/30 bg-green-500/10 px-2 py-1 text-xs font-medium text-green-500 transition-colors active:opacity-60 hover:bg-green-500/20"
-                          >
-                            <WhatsAppIcon className="h-3 w-3" /> WhatsApp
-                          </a>
+                          <WhatsAppLinkMenu
+                            phone={lead.contactNumber as string}
+                            customerName={lead.customerName as string}
+                            variant="pill"
+                          />
                         </div>
                       )}
                     </div>

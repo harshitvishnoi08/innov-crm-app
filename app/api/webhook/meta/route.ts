@@ -47,6 +47,14 @@ export async function POST(req: NextRequest) {
             console.log("Raw Meta lead data:", JSON.stringify(leadData));
             console.log("Form data:", JSON.stringify(formData));
 
+            if (leadData.error) {
+              console.error(
+                `META TOKEN ERROR — cannot fetch lead ${leadgenId}:`,
+                JSON.stringify(leadData.error),
+                '| Regenerate META_PAGE_ACCESS_TOKEN with leads_retrieval permission'
+              );
+            }
+
             if (leadData.field_data) {
               const fields: Record<string, string> = {};
               for (const field of leadData.field_data) {
