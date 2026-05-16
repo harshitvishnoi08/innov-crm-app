@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
+import { logLeadFieldChanges } from "@/lib/lead-activity-log";
+
+const TRACKED_FIELDS = [
+  "customerName",
+  "contactNumber",
+  "email",
+  "city",
+  "state",
+  "status",
+  "temperature",
+  "activeStatus",
+  "assignedTo",
+  "followUpDate",
+  "propertyType",
+  "briefScope",
+  "budgetRange",
+  "requirement",
+  "initialNotes",
+] as const;
 
 // GET single lead
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -24,7 +43,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           orderBy: { meetingDate: "asc" },
           include: { user: { select: { id: true, name: true } } },
         },
-        activities: { orderBy: { activityDate: "desc" } },
+        activities: {
+          orderBy: { activityDate: "desc" },
+          include: { user: { select: { id: true, name: true } } },
+        },
       },
     });
     if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
@@ -46,36 +68,53 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { user, role, response } = await requireAuthWithRole();
     if (!user) return response!;
 
+    const existing = await prisma.lead.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    }
+
     // USER can only update leads assigned to them, and cannot reassign
     if (role === "USER") {
-      const existing = await prisma.lead.findUnique({ where: { id }, select: { assignedTo: true } });
-      if (!existing || existing.assignedTo !== user.id) {
+      if (existing.assignedTo !== user.id) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
     }
 
     const body = await req.json();
+
+    const updateData: Record<string, unknown> = {
+      ...(body.customerName && { customerName: body.customerName }),
+      ...(body.contactNumber && { contactNumber: body.contactNumber }),
+      ...(body.email !== undefined && { email: body.email }),
+      ...(body.city !== undefined && { city: body.city }),
+      ...(body.state !== undefined && { state: body.state }),
+      ...(body.status && { status: body.status }),
+      ...(body.temperature !== undefined && { temperature: body.temperature }),
+      ...(body.activeStatus && { activeStatus: body.activeStatus }),
+      ...(role === "ADMIN" && body.assignedTo !== undefined && { assignedTo: body.assignedTo || null }),
+      ...(body.followUpDate !== undefined && {
+        followUpDate: body.followUpDate ? new Date(body.followUpDate) : null,
+      }),
+      ...(body.propertyType !== undefined && { propertyType: body.propertyType }),
+      ...(body.briefScope !== undefined && { briefScope: body.briefScope }),
+      ...(body.budgetRange !== undefined && { budgetRange: body.budgetRange }),
+      ...(body.requirement !== undefined && { requirement: body.requirement }),
+      ...(body.initialNotes !== undefined && { initialNotes: body.initialNotes }),
+    };
+
     const lead = await prisma.lead.update({
       where: { id },
-      data: {
-        ...(body.customerName && { customerName: body.customerName }),
-        ...(body.contactNumber && { contactNumber: body.contactNumber }),
-        ...(body.email !== undefined && { email: body.email }),
-        ...(body.city !== undefined && { city: body.city }),
-        ...(body.state !== undefined && { state: body.state }),
-        ...(body.status && { status: body.status }),
-        ...(body.temperature !== undefined && { temperature: body.temperature }),
-        ...(body.activeStatus && { activeStatus: body.activeStatus }),
-        // Only ADMIN can reassign leads
-        ...(role === "ADMIN" && body.assignedTo !== undefined && { assignedTo: body.assignedTo || null }),
-        ...(body.followUpDate !== undefined && { followUpDate: body.followUpDate ? new Date(body.followUpDate) : null }),
-        ...(body.propertyType !== undefined && { propertyType: body.propertyType }),
-        ...(body.briefScope !== undefined && { briefScope: body.briefScope }),
-        ...(body.budgetRange !== undefined && { budgetRange: body.budgetRange }),
-        ...(body.requirement !== undefined && { requirement: body.requirement }),
-        ...(body.initialNotes !== undefined && { initialNotes: body.initialNotes }),
-      },
+      data: updateData,
     });
+
+    await logLeadFieldChanges({
+      leadId: id,
+      userId: user.id,
+      before: existing as Record<string, unknown>,
+      after: lead as Record<string, unknown>,
+      fields: [...TRACKED_FIELDS],
+    });
+
     return NextResponse.json({ success: true, data: lead });
   } catch (error) {
     console.error("PATCH lead error:", error);

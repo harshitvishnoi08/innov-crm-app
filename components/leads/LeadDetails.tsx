@@ -17,6 +17,7 @@ import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 import { WhatsAppLinkMenu } from '@/components/leads/WhatsAppLinkMenu';
 import { toast } from 'sonner';
 import { WhatsAppChat } from '@/components/leads/WhatsAppChat';
+import { getActivityLabel, isSystemActivity } from '@/components/leads/activity-labels';
 
 function formatDate(value: string | null | undefined) {
   if (!value) return '—';
@@ -539,10 +540,31 @@ export function LeadDetail({ id }: { id: string }) {
                   )}
                   {[...comments].reverse().map((c) => {
                     const user = c.user as Record<string, string> | null;
+                    const commentType = c.type as string | undefined;
+                    const activityLabel = getActivityLabel(commentType);
+                    const systemEvent = isSystemActivity(commentType);
                     return (
-                      <div key={c.id as string} className="flex flex-col gap-1 items-start">
-                        <div className="rounded-2xl rounded-tl-sm bg-muted/60 px-3 py-2 max-w-[85%]">
-                          <p className="text-sm leading-relaxed">{c.content as string}</p>
+                      <div
+                        key={c.id as string}
+                        className={`flex flex-col gap-1 items-start ${systemEvent ? 'w-full' : ''}`}
+                      >
+                        {activityLabel && (
+                          <span
+                            className={`text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full ${activityLabel.className}`}
+                          >
+                            {activityLabel.label}
+                          </span>
+                        )}
+                        <div
+                          className={`rounded-2xl px-3 py-2 max-w-[95%] ${
+                            systemEvent
+                              ? 'rounded-lg border border-border/60 bg-muted/30 w-full max-w-full'
+                              : 'rounded-tl-sm bg-muted/60 max-w-[85%]'
+                          }`}
+                        >
+                          <p className={`text-sm leading-relaxed ${systemEvent ? 'text-muted-foreground' : ''}`}>
+                            {c.content as string}
+                          </p>
                         </div>
                         <p className="text-xs text-muted-foreground px-1">
                           {user?.name || 'System'} · {formatDateTime(c.createdAt as string)}

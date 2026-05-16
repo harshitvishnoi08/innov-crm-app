@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
+import { logBulkLeadChanges } from "@/lib/lead-activity-log";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -31,6 +32,18 @@ export async function PATCH(req: NextRequest) {
       : { id: { in: ids } };
 
     const result = await prisma.lead.updateMany({ where, data: updateData });
+
+    if (result.count > 0) {
+      const updatedLeads = await prisma.lead.findMany({
+        where,
+        select: { id: true },
+      });
+      await logBulkLeadChanges({
+        leadIds: updatedLeads.map((l: { id: string }) => l.id),
+        userId: user.id,
+        updateData,
+      });
+    }
 
     return NextResponse.json({ success: true, data: { count: result.count } });
   } catch (error) {

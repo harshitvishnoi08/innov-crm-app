@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendNewLeadNotification } from "@/lib/mailer";
 import { sendWhatsAppTemplate, normalizePhone } from "@/lib/whatsapp";
+import { ActivityType, logLeadActivity } from "@/lib/lead-activity-log";
 
 const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN;
 
@@ -95,6 +96,13 @@ export async function POST(req: NextRequest) {
               });
 
               console.log("New lead saved from form:", formData.name, JSON.stringify(fields));
+
+              await logLeadActivity({
+                leadId: newLead.id,
+                userId: null,
+                type: ActivityType.LEAD_CREATED,
+                content: `Lead created from ${formData.name || "Meta Ads"} (${platform})`,
+              });
 
               void sendNewLeadNotification({
                 id: newLead.id,

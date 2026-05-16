@@ -34,15 +34,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "leadId and content are required" }, { status: 400 });
     }
 
+    const type = body.type || "note";
     const comment = await prisma.comment.create({
       data: {
         leadId: body.leadId,
         userId: user.id,
         content: body.content,
-        type: body.type || "note",
+        type,
       },
       include: { user: { select: { id: true, name: true } } },
     });
+
+    // Mirror user notes into lead_activities for a complete audit trail
+    if (type === "note") {
+      await prisma.leadActivity.create({
+        data: {
+          leadId: body.leadId,
+          userId: user.id,
+          activityType: type,
+          note: body.content,
+          activityDate: new Date(),
+        },
+      });
+    }
 
     return NextResponse.json({ success: true, data: comment });
   } catch (error) {

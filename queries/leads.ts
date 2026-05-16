@@ -84,6 +84,7 @@ export function useUpdateLead(id: string) {
     mutationFn: (data: Record<string, unknown>) => updateLead(id, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: leadQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: leadQueryKeys.detail(id) });
     },
   });
 }

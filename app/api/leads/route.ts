@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
 import { sendNewLeadNotification } from "@/lib/mailer";
+import { ActivityType, logLeadActivity } from "@/lib/lead-activity-log";
 
 // GET leads with full server-side filtering + pagination
 export async function GET(req: NextRequest) {
@@ -115,6 +116,13 @@ export async function POST(req: NextRequest) {
         initialNotes:     body.initialNotes,
         userId:           user.id,
       },
+    });
+
+    await logLeadActivity({
+      leadId: lead.id,
+      userId: user.id,
+      type: ActivityType.LEAD_CREATED,
+      content: `Lead created manually${body.leadSource ? ` from ${body.leadSource}` : ''}`,
     });
 
     // Fire-and-forget — don't block the response
