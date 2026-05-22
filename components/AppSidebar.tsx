@@ -34,6 +34,7 @@ import { cn } from '@/lib/utils';
 import { useRef, useState, useSyncExternalStore } from 'react';
 import NavFooter from '@/components/NavFooter';
 import { useAuth } from '@/contexts/AuthContext';
+import { InnovAiPanel } from '@/components/ai/InnovAiPanel';
 
 function MobileSidebarCloser() {
   const pathname = usePathname();
@@ -265,6 +266,7 @@ export function AppSidebar({ children, ...props }: React.ComponentProps<typeof S
             </BreadcrumbList>
           </Breadcrumb>
           <div className='ml-auto flex shrink-0 items-center space-x-2'>
+            <InnovAiPanel />
             <Button variant='outline' size='sm' onClick={handleRefresh} disabled={isRefreshing}>
               <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
               <span className='hidden sm:inline'>Refresh</span>
