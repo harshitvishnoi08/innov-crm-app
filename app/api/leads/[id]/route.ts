@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
 import { logLeadFieldChanges } from "@/lib/lead-activity-log";
+import { sendLeadCrmEvent } from "@/lib/meta-capi";
 
 const TRACKED_FIELDS = [
   "customerName",
@@ -114,6 +115,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       after: lead as Record<string, unknown>,
       fields: [...TRACKED_FIELDS],
     });
+
+    // Meta lead-quality feedback: when a Meta-sourced lead changes status, tell
+    // Meta whether it was qualified or junk. Fire-and-forget; never blocks save.
+    if (existing.leadgenId && lead.status !== existing.status) {
+      void sendLeadCrmEvent({ leadgenId: existing.leadgenId, status: lead.status });
+    }
 
     return NextResponse.json({ success: true, data: lead });
   } catch (error) {

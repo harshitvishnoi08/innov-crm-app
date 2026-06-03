@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
                   contactNumber: fields["phone_number"] || fields["phone"] || "",
                   city: fields["city"] || fields["street_address"] || "",
                   propertyType: fields["your_property_type_"] || fields["property_type"] || "",
+                  leadgenId: String(leadgenId),
                   serviceRequired: fields["you_are_looking_for_?_"] || "",
                   budgetRange: fields["your_expected_budget_"] || "",
                   propertySize:

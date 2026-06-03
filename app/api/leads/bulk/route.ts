@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
 import { logBulkLeadChanges } from "@/lib/lead-activity-log";
+import { eventNameForStatus, sendLeadCrmEvent } from "@/lib/meta-capi";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -36,13 +37,21 @@ export async function PATCH(req: NextRequest) {
     if (result.count > 0) {
       const updatedLeads = await prisma.lead.findMany({
         where,
-        select: { id: true },
+        select: { id: true, leadgenId: true },
       });
       await logBulkLeadChanges({
         leadIds: updatedLeads.map((l: { id: string }) => l.id),
         userId: user.id,
         updateData,
       });
+
+      // Meta lead-quality feedback for Meta-sourced leads in this batch.
+      // Fire-and-forget; failures are logged and never block the response.
+      if (typeof data.status === "string" && eventNameForStatus(data.status)) {
+        for (const l of updatedLeads as { id: string; leadgenId: string | null }[]) {
+          if (l.leadgenId) void sendLeadCrmEvent({ leadgenId: l.leadgenId, status: data.status });
+        }
+      }
     }
 
     return NextResponse.json({ success: true, data: { count: result.count } });
