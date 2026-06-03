@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const dateCreated  = searchParams.get("dateCreated") || "";
     const followUp     = searchParams.get("followUp") || "";
     const page         = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const pageSize     = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "25", 10)));
+    const pageSize     = Math.min(250, Math.max(1, parseInt(searchParams.get("pageSize") || "25", 10)));
     const exportAll    = searchParams.get("all") === "1";
 
     const ISTOffsetMs   = 5.5 * 60 * 60 * 1000;
@@ -58,11 +58,7 @@ export async function GET(req: NextRequest) {
     };
 
     const include = {
-      user:         { select: { id: true, name: true, email: true } },
-      assignedUser: { select: { id: true, name: true, email: true } },
-      teamMembers:  { include: { user: { select: { id: true, name: true, email: true } } } },
-      comments:     { orderBy: { createdAt: "desc" as const }, take: 1 },
-      meetings:     { orderBy: { meetingDate: "asc" as const }, take: 1 },
+      assignedUser: { select: { id: true, name: true } },
     };
 
     if (exportAll) {

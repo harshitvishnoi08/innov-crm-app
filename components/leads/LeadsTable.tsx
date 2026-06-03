@@ -20,7 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE_OPTIONS = [25, 50, 100, 250];
 
 
 function getPageNums(current: number, total: number): (number | '...')[] {
@@ -164,6 +164,7 @@ export function LeadsTable() {
     platform: 'Meta Ads',
   });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkUpdating, setBulkUpdating] = useState(false);
 
@@ -214,8 +215,8 @@ export function LeadsTable() {
     }
   };
 
-  // Reset to page 1 whenever any filter changes
-  useEffect(() => { setPage(1); }, [search, status, temperature, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter]);
+  // Reset to page 1 whenever any filter or page size changes
+  useEffect(() => { setPage(1); }, [search, status, temperature, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter, pageSize]);
 
   const { data: usersData } = useUsersQuery();
   const users = (usersData ?? []) as { id: string; name: string }[];
@@ -235,7 +236,7 @@ export function LeadsTable() {
     dateCreated: dateFilter     || undefined,
     followUp:    followUpFilter || undefined,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize,
   });
 
   const leads      = data?.data      ?? [];
@@ -893,35 +894,57 @@ export function LeadsTable() {
       )}
 
       {/* ── Pagination ── */}
-      {pagination && pagination.totalPages > 1 && (
+      {pagination && (
         <div className="flex flex-col items-center gap-3 py-2 sm:flex-row sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {((pagination.page - 1) * pagination.pageSize) + 1}–{Math.min(pagination.page * pagination.pageSize, pagination.total)} of {pagination.total} leads
+            {pagination.total > 0
+              ? `Showing ${((pagination.page - 1) * pagination.pageSize) + 1}–${Math.min(pagination.page * pagination.pageSize, pagination.total)} of ${pagination.total} leads`
+              : `${pagination.total} leads`}
           </p>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={pagination.page === 1}>
-              <ChevronLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Prev</span>
-            </Button>
-            {getPageNums(pagination.page, pagination.totalPages).map((p, i) =>
-              p === '...' ? (
-                <span key={`ellipsis-${i}`} className="px-1 text-sm text-muted-foreground">…</span>
-              ) : (
-                <Button
-                  key={p}
-                  variant={p === pagination.page ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setPage(p as number)}
-                  className="h-8 w-8 p-0"
-                >
-                  {p}
+          <div className="flex items-center gap-2">
+            {/* Rows per page */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page</span>
+              <Select value={String(pageSize)} onValueChange={v => setPageSize(Number(v))}>
+                <SelectTrigger className="h-8 w-[80px] text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map(n => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Page nav — only shown when there's more than 1 page */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={pagination.page === 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Prev</span>
                 </Button>
-              )
+                {getPageNums(pagination.page, pagination.totalPages).map((p, i) =>
+                  p === '...' ? (
+                    <span key={`ellipsis-${i}`} className="px-1 text-sm text-muted-foreground">…</span>
+                  ) : (
+                    <Button
+                      key={p}
+                      variant={p === pagination.page ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setPage(p as number)}
+                      className="h-8 w-8 p-0"
+                    >
+                      {p}
+                    </Button>
+                  )
+                )}
+                <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={pagination.page === pagination.totalPages}>
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             )}
-            <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={pagination.page === pagination.totalPages}>
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       )}

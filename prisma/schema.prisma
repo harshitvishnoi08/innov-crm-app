@@ -134,6 +134,7 @@ model Lead {
   city              String?
   platform          String
   leadSource        String?          @default("Meta Ads")
+  leadgenId         String?          @map("leadgen_id")
   status            LeadStatus       @default(NEW)
   temperature       LeadTemperature?
   activeStatus      ActiveStatus     @default(ACTIVE)
@@ -165,6 +166,11 @@ model Lead {
   @@index([status])
   @@index([userId])
   @@index([followUpDate])
+  @@index([leadgenId])
+  @@index([createdAt])
+  @@index([assignedTo, createdAt])
+  @@index([temperature])
+  @@index([activeStatus])
   @@map("leads")
 }
 
