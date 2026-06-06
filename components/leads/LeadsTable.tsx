@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useLeadsQuery, useLeadsMetaQuery, useCreateLead } from '@/queries/leads';
 import { useUsersQuery } from '@/queries/users';
 import { Button } from '@/components/ui/button';
@@ -140,17 +140,21 @@ function LeadsTableSkeleton() {
 
 export function LeadsTable() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const authUser = useAuth();
   const isAdmin = authUser?.role === 'ADMIN';
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [temperature, setTemperature] = useState('');
-  const [activeStatus, setActiveStatus] = useState('');
-  const [assigneeFilter, setAssigneeFilter] = useState('');
-  const [platformFilter, setPlatformFilter] = useState('');
-  const [sourceFilter, setSourceFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
-  const [followUpFilter, setFollowUpFilter] = useState('');
+  // Initialise all filters/page from the URL so state survives navigating into a
+  // lead and pressing back (the browser restores the query string).
+  const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
+  const [status, setStatus] = useState(() => searchParams.get('status') ?? '');
+  const [temperature, setTemperature] = useState(() => searchParams.get('temp') ?? '');
+  const [activeStatus, setActiveStatus] = useState(() => searchParams.get('active') ?? '');
+  const [assigneeFilter, setAssigneeFilter] = useState(() => searchParams.get('assignee') ?? '');
+  const [platformFilter, setPlatformFilter] = useState(() => searchParams.get('platform') ?? '');
+  const [sourceFilter, setSourceFilter] = useState(() => searchParams.get('source') ?? '');
+  const [dateFilter, setDateFilter] = useState(() => searchParams.get('date') ?? '');
+  const [followUpFilter, setFollowUpFilter] = useState(() => searchParams.get('followup') ?? '');
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -163,8 +167,11 @@ export function LeadsTable() {
     temperature: 'WARM',
     platform: 'Meta Ads',
   });
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [page, setPage] = useState(() => Math.max(1, Number(searchParams.get('page')) || 1));
+  const [pageSize, setPageSize] = useState(() => {
+    const fromUrl = Number(searchParams.get('pageSize'));
+    return PAGE_SIZE_OPTIONS.includes(fromUrl) ? fromUrl : 25;
+  });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkUpdating, setBulkUpdating] = useState(false);
 
@@ -215,8 +222,38 @@ export function LeadsTable() {
     }
   };
 
-  // Reset to page 1 whenever any filter or page size changes
-  useEffect(() => { setPage(1); }, [search, status, temperature, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter, pageSize]);
+  // Reset to page 1 only when the filters/page-size genuinely CHANGE — compared
+  // by value, not by render count. (A render-count guard is unreliable because
+  // React Strict Mode double-invokes effects in dev, which would wrongly reset
+  // the page restored from the URL on back-navigation.)
+  const filterSig = JSON.stringify([search, status, temperature, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter, pageSize]);
+  const filterSigRef = useRef(filterSig);
+  useEffect(() => {
+    if (filterSigRef.current !== filterSig) {
+      filterSigRef.current = filterSig;
+      setPage(1);
+    }
+  }, [filterSig]);
+
+  // Mirror filters + page into the URL query string so the state is preserved
+  // when the user opens a lead and navigates back. Uses replace() to avoid
+  // pushing a new history entry on every keystroke/filter change.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (search)          params.set('q', search);
+    if (status)          params.set('status', status);
+    if (temperature)     params.set('temp', temperature);
+    if (activeStatus)    params.set('active', activeStatus);
+    if (assigneeFilter)  params.set('assignee', assigneeFilter);
+    if (platformFilter)  params.set('platform', platformFilter);
+    if (sourceFilter)    params.set('source', sourceFilter);
+    if (dateFilter)      params.set('date', dateFilter);
+    if (followUpFilter)  params.set('followup', followUpFilter);
+    if (page > 1)        params.set('page', String(page));
+    if (pageSize !== 25) params.set('pageSize', String(pageSize));
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [search, status, temperature, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter, page, pageSize, pathname, router]);
 
   const { data: usersData } = useUsersQuery();
   const users = (usersData ?? []) as { id: string; name: string }[];

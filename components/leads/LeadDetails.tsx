@@ -46,6 +46,16 @@ type AppUser = { id: string; name: string; email: string };
 
 export function LeadDetail({ id }: { id: string }) {
   const router = useRouter();
+  // Go back to the exact previous list view (preserving its filters/page/scroll
+  // stored in the URL). Falls back to the bare leads page when the lead was
+  // opened via a direct link / refresh with no in-app history to return to.
+  const goBackToLeads = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/admin/leads');
+    }
+  };
   const { data: lead, isLoading, refetch } = useLeadQuery(id);
   const updateLead = useUpdateLead(id);
   const addComment = useAddComment(id);
@@ -97,7 +107,7 @@ export function LeadDetail({ id }: { id: string }) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20">
         <p className="text-muted-foreground">Lead not found.</p>
-        <Button variant="outline" onClick={() => router.push('/admin/leads')}>
+        <Button variant="outline" onClick={goBackToLeads}>
           Back to Leads
         </Button>
       </div>
@@ -179,7 +189,7 @@ export function LeadDetail({ id }: { id: string }) {
       const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed');
       toast.success('Lead deleted.');
-      router.push('/admin/leads');
+      goBackToLeads();
     } catch {
       toast.error('Failed to delete lead.');
       setDeleting(false);
@@ -217,7 +227,7 @@ export function LeadDetail({ id }: { id: string }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start gap-2 sm:items-center">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/admin/leads')} className="shrink-0">
+        <Button variant="ghost" size="sm" onClick={goBackToLeads} className="shrink-0">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
         </Button>
         <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight sm:text-2xl">
