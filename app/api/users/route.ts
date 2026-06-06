@@ -88,10 +88,13 @@ export async function POST(request: Request) {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    // Send invite email via Supabase — user sets their own password
+    // Send invite email via Supabase — user sets their own password.
+    // The invite email template uses the token_hash/verifyOtp flow and points to
+    // /auth/confirm (see app/auth/confirm/route.ts). redirectTo is only used as a
+    // fallback ({{ .RedirectTo }}) for the legacy code flow.
     const admin = adminClient();
     const { data: authData, error: authError } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
+      redirectTo: `${siteUrl}/auth/confirm?next=/auth/reset-password`,
       data: { name },
     });
 
