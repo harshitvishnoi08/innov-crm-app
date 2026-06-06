@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLeadQuery, useUpdateLead, useAddComment, useScheduleMeeting, useUpdateMeeting, useDeleteMeeting } from '@/queries/leads';
+import { useUsersQuery } from '@/queries/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -76,22 +77,24 @@ export function LeadDetail({ id }: { id: string }) {
   const [allUsers, setAllUsers] = useState<AppUser[]>([]);
   const [teamLoading, setTeamLoading] = useState(false);
 
+  // Users are shared across the app and rarely change, so fetch them through the
+  // cached react-query hook instead of a raw fetch on every lead open. Opening
+  // many leads in a row now reuses one cached result rather than re-hitting
+  // /api/users (and its auth round-trip) each time.
+  const { data: usersData } = useUsersQuery({ staleTime: 1000 * 60 * 5 });
+
   useEffect(() => {
-    fetch('/api/users')
-      .then(r => r.json())
-      .then(d => {
-        if (d.success) {
-          const savedIds: string[] = JSON.parse(
-            localStorage.getItem('team_enabled_users') ?? '[]'
-          );
-          const filtered = savedIds.length > 0
-            ? d.data.users.filter((u: AppUser) => savedIds.includes(u.id))
-            : d.data.users;
-          setAllUsers(filtered);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const users: AppUser[] = (usersData as AppUser[]) ?? [];
+    let savedIds: string[] = [];
+    try {
+      savedIds = JSON.parse(localStorage.getItem('team_enabled_users') ?? '[]');
+    } catch {
+      savedIds = [];
+    }
+    setAllUsers(
+      savedIds.length > 0 ? users.filter((u) => savedIds.includes(u.id)) : users
+    );
+  }, [usersData]);
 
   if (isLoading) {
     return (

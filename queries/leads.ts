@@ -60,12 +60,43 @@ export function useLeadsMetaQuery() {
 }
 
 export function useLeadQuery(id: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: leadQueryKeys.detail(id),
     queryFn: () => fetchLead(id),
     enabled: !!id,
     staleTime: 1000 * 30,
+    // Seed from any cached leads list so the header/info fields render instantly
+    // instead of a full-page skeleton; the fresh fetch (comments, meetings,
+    // activities, team) then fills in the rest.
+    placeholderData: () => {
+      const lists = queryClient.getQueriesData<LeadsResponse>({
+        queryKey: ['leads', 'list'],
+      });
+      for (const [, list] of lists) {
+        const found = list?.data?.find((l) => (l as { id?: string }).id === id);
+        if (found) return found;
+      }
+      return undefined;
+    },
   });
+}
+
+/**
+ * Returns a function that warms the detail cache for a lead — call it on row
+ * hover so the lead is already loading (or loaded) by the time the user clicks.
+ * Reuses the same staleTime, so it won't refetch a lead opened seconds ago.
+ */
+export function usePrefetchLead() {
+  const queryClient = useQueryClient();
+  return (id: string) => {
+    if (!id) return;
+    void queryClient.prefetchQuery({
+      queryKey: leadQueryKeys.detail(id),
+      queryFn: () => fetchLead(id),
+      staleTime: 1000 * 30,
+    });
+  };
 }
 
 export function useCreateLead() {

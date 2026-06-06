@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useLeadsQuery, useLeadsMetaQuery, useCreateLead } from '@/queries/leads';
+import { useLeadsQuery, useLeadsMetaQuery, useCreateLead, usePrefetchLead } from '@/queries/leads';
 import { useUsersQuery } from '@/queries/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -143,6 +143,7 @@ export function LeadsTable() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const authUser = useAuth();
+  const prefetchLead = usePrefetchLead();
   const isAdmin = authUser?.role === 'ADMIN';
   // Initialise all filters/page from the URL so state survives navigating into a
   // lead and pressing back (the browser restores the query string).
@@ -636,6 +637,7 @@ export function LeadsTable() {
                 <Card
                   key={lead.id as string}
                   className={`overflow-hidden gap-0 py-0 cursor-pointer transition-all duration-150 hover:bg-muted/30 active:bg-muted/50 ${isSelected ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/20' : ''}`}
+                  onMouseEnter={() => prefetchLead(lead.id as string)}
                   onClick={() => router.push(`/admin/leads/${lead.id}`)}
                 >
                   <CardContent className="p-4">
@@ -800,6 +802,7 @@ export function LeadsTable() {
                       <TableRow
                         key={lead.id as string}
                         className={`cursor-pointer transition-colors duration-150 hover:bg-muted/50 ${selectedIds.has(lead.id as string) ? 'bg-primary/10 hover:bg-primary/15' : ''}`}
+                        onMouseEnter={() => prefetchLead(lead.id as string)}
                         onClick={() => router.push(`/admin/leads/${lead.id}`)}
                       >
                         <TableCell onClick={e => e.stopPropagation()}>
