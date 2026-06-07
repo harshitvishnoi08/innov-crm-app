@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Search, Plus, Trash2, ChevronRight, X, Download, Phone, ChevronLeft, CheckSquare } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { WhatsAppLinkMenu } from '@/components/leads/WhatsAppLinkMenu';
+import { DateCreatedFilter, dateCreatedLabel } from '@/components/leads/DateCreatedFilter';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
@@ -501,17 +502,7 @@ export function LeadsTable() {
               {sources.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={dateFilter || 'ALL'} onValueChange={v => setDateFilter(v === 'ALL' ? '' : v)}>
-            <SelectTrigger className={`h-9 w-[125px] shrink-0${dateFilter ? 'border-primary/50 text-primary' : ''}`}>
-              <SelectValue placeholder="Date Created" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Any Date</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">Last 7 days</SelectItem>
-              <SelectItem value="month">This month</SelectItem>
-            </SelectContent>
-          </Select>
+          <DateCreatedFilter value={dateFilter} onChange={setDateFilter} />
           <Select value={followUpFilter || 'ALL'} onValueChange={v => setFollowUpFilter(v === 'ALL' ? '' : v)}>
             <SelectTrigger className={`h-9 w-[135px] shrink-0${followUpFilter ? 'border-primary/50 text-primary' : ''}`}>
               <SelectValue placeholder="Follow-up" />
@@ -536,7 +527,7 @@ export function LeadsTable() {
             {assigneeFilter && <FilterChip label={`Assignee: ${assigneeFilter === 'UNASSIGNED' ? 'Unassigned' : (users.find(u => u.id === assigneeFilter)?.name ?? assigneeFilter)}`} onRemove={() => setAssigneeFilter('')} />}
             {platformFilter && <FilterChip label={`Platform: ${platformFilter}`} onRemove={() => setPlatformFilter('')} />}
             {sourceFilter && <FilterChip label={`Source: ${sourceFilter}`} onRemove={() => setSourceFilter('')} />}
-            {dateFilter && <FilterChip label={`Created: ${dateFilter === 'today' ? 'Today' : dateFilter === 'week' ? 'Last 7 days' : 'This month'}`} onRemove={() => setDateFilter('')} />}
+            {dateFilter && <FilterChip label={`Created: ${dateCreatedLabel(dateFilter)}`} onRemove={() => setDateFilter('')} />}
             {followUpFilter && <FilterChip label={`Follow-up: ${followUpFilter === 'overdue' ? 'Overdue' : followUpFilter === 'today' ? 'Today' : followUpFilter === 'week' ? 'This week' : 'No date'}`} onRemove={() => setFollowUpFilter('')} />}
             <button onClick={clearAllFilters} className="ml-1 text-xs text-muted-foreground underline hover:text-foreground">Clear all</button>
           </div>

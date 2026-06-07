@@ -32,6 +32,19 @@ export async function GET(req: NextRequest) {
     const weekEndUTC    = new Date(todayStartUTC.getTime() + 7 * 86400000);
     const monthStartUTC = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 1) - ISTOffsetMs);
 
+    // Custom calendar range: "YYYY-MM-DD:YYYY-MM-DD" (inclusive, IST day bounds).
+    let customCreatedAt: { gte: Date; lt: Date } | undefined;
+    const rangeMatch = /^(\d{4}-\d{2}-\d{2}):(\d{4}-\d{2}-\d{2})$/.exec(dateCreated);
+    if (rangeMatch) {
+      const [fy, fm, fd] = rangeMatch[1].split("-").map(Number);
+      const [ty, tm, td] = rangeMatch[2].split("-").map(Number);
+      const fromStartUTC = new Date(Date.UTC(fy, fm - 1, fd) - ISTOffsetMs);
+      const toEndUTC = new Date(Date.UTC(ty, tm - 1, td) - ISTOffsetMs + 86400000);
+      if (!Number.isNaN(fromStartUTC.getTime()) && !Number.isNaN(toEndUTC.getTime()) && toEndUTC > fromStartUTC) {
+        customCreatedAt = { gte: fromStartUTC, lt: toEndUTC };
+      }
+    }
+
     const where = {
       ...(search && {
         OR: [
@@ -51,6 +64,7 @@ export async function GET(req: NextRequest) {
       ...(dateCreated === "today" && { createdAt: { gte: todayStartUTC, lt: todayEndUTC } }),
       ...(dateCreated === "week"  && { createdAt: { gte: weekStartUTC } }),
       ...(dateCreated === "month" && { createdAt: { gte: monthStartUTC } }),
+      ...(customCreatedAt && { createdAt: customCreatedAt }),
       ...(followUp === "overdue"  && { followUpDate: { not: null, lt: todayStartUTC } }),
       ...(followUp === "today"    && { followUpDate: { gte: todayStartUTC, lt: todayEndUTC } }),
       ...(followUp === "week"     && { followUpDate: { gte: todayStartUTC, lt: weekEndUTC } }),
