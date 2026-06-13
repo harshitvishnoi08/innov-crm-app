@@ -14,12 +14,12 @@ export async function GET(req: NextRequest) {
 
   try {
     const now = new Date();
-    const in10Min = new Date(now.getTime() + 10 * 60 * 1000);
+    const in30Min = new Date(now.getTime() + 30 * 60 * 1000);
 
-    // Find meetings starting in the next 10 minutes that haven't been reminded yet
+    // Find meetings starting in the next 30 minutes that haven't been reminded yet
     const meetings = await prisma.meeting.findMany({
       where: {
-        meetingDate: { gte: now, lte: in10Min },
+        meetingDate: { gte: now, lte: in30Min },
         reminderSent: false,
       },
       select: {
