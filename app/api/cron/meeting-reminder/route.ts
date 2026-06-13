@@ -138,12 +138,11 @@ export async function GET(req: NextRequest) {
             "meeting_reminder",
             "en",
             [
-              // Header: {{1}} = minutes remaining
-              { type: "header", parameters: [{ type: "text", text: String(minsRemaining) }] },
-              // Body: {{1}}..{{6}}
+              // Body: {{1}}..{{7}} (all variables live in the body of this template)
               {
                 type: "body",
                 parameters: [
+                  { type: "text", text: String(minsRemaining) },
                   { type: "text", text: assignedName },
                   { type: "text", text: waSafe(meeting.lead.customerName) },
                   { type: "text", text: waSafe(meeting.lead.contactNumber) },
