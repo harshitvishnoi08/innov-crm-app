@@ -32,6 +32,7 @@ type UserData = {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   role: 'ADMIN' | 'USER';
 };
 
@@ -48,6 +49,7 @@ export function UserActions(props: UserActionsProps) {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [name, setName] = useState(props.mode === 'row' ? props.user.name : '');
   const [email, setEmail] = useState(props.mode === 'row' ? props.user.email : '');
+  const [phone, setPhone] = useState(props.mode === 'row' ? props.user.phone ?? '' : '');
   const [role, setRole] = useState<'ADMIN' | 'USER'>(props.mode === 'row' ? props.user.role : 'USER');
 
   const createMutation = useCreateUserMutation();
@@ -63,6 +65,7 @@ export function UserActions(props: UserActionsProps) {
         await createMutation.mutateAsync({
           name: name.trim(),
           email: email.trim().toLowerCase(),
+          phone: phone.trim(),
           role,
         });
       } else {
@@ -70,6 +73,7 @@ export function UserActions(props: UserActionsProps) {
           id: props.user.id,
           name: name.trim(),
           email: email.trim().toLowerCase(),
+          phone: phone.trim(),
           role,
         });
       }
@@ -133,6 +137,21 @@ export function UserActions(props: UserActionsProps) {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="user-action-phone">WhatsApp number</Label>
+                <Input
+                  id="user-action-phone"
+                  type="tel"
+                  placeholder="9876543210"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Used for meeting reminders on WhatsApp. Indian numbers can be 10 digits.
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <Label>Role</Label>
                 <Select
                   value={role}
@@ -173,6 +192,7 @@ export function UserActions(props: UserActionsProps) {
                   if (isRowActions) {
                     setName(props.user.name);
                     setEmail(props.user.email);
+                    setPhone(props.user.phone ?? '');
                     setRole(props.user.role);
                   }
                   setIsOpen(true);
@@ -201,6 +221,7 @@ export function UserActions(props: UserActionsProps) {
               if (open && isRowActions) {
                 setName(props.user.name);
                 setEmail(props.user.email);
+                setPhone(props.user.phone ?? '');
                 setRole(props.user.role);
               }
             }}
@@ -235,6 +256,21 @@ export function UserActions(props: UserActionsProps) {
                     required
                     disabled={isSubmitting}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="user-action-phone">WhatsApp number</Label>
+                  <Input
+                    id="user-action-phone"
+                    type="tel"
+                    placeholder="9876543210"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    disabled={isSubmitting}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Used for meeting reminders on WhatsApp. Indian numbers can be 10 digits.
+                  </p>
                 </div>
 
                 <div className="space-y-2">

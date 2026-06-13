@@ -14,6 +14,7 @@ export async function fetchUsers() {
 export async function createUser(payload: {
   name: string;
   email: string;
+  phone?: string;
   role: 'ADMIN' | 'USER';
 }) {
   const normalizedPayload = {
@@ -36,7 +37,7 @@ export async function createUser(payload: {
   return json?.data;
 }
 
-export async function updateUser(payload: { id: string; name: string; email: string; role?: 'ADMIN' | 'USER' }) {
+export async function updateUser(payload: { id: string; name: string; email: string; phone?: string; role?: 'ADMIN' | 'USER' }) {
   const normalizedPayload = {
     ...payload,
     email: payload.email.trim().toLowerCase(),

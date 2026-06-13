@@ -19,7 +19,7 @@ export function useCreateUserMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: { name: string; email: string; role: 'ADMIN' | 'USER' }) =>
+    mutationFn: (payload: { name: string; email: string; phone?: string; role: 'ADMIN' | 'USER' }) =>
       createUser(payload),
     onSuccess: async () => {
       toast.success('Invite sent! The user will receive an email to set their password.');
@@ -36,7 +36,7 @@ export function useUpdateUserMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: { id: string; name: string; email: string; role?: 'ADMIN' | 'USER' }) =>
+    mutationFn: (payload: { id: string; name: string; email: string; phone?: string; role?: 'ADMIN' | 'USER' }) =>
       updateUser(payload),
     onSuccess: async () => {
       toast.success('User updated successfully.');

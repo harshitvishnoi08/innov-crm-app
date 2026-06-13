@@ -3,9 +3,18 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { requireAuth, adminClient } from '@/lib/api-auth';
 
+// Optional phone — accepts digits, +, -, spaces, parentheses; empty string allowed (means "clear it").
+const phoneSchema = z
+  .string()
+  .trim()
+  .regex(/^[0-9+\-\s()]{7,20}$/, 'Please provide a valid phone number.')
+  .optional()
+  .or(z.literal(''));
+
 const createUserSchema = z.object({
   name: z.string().trim().min(1, 'Name is required.'),
   email: z.email('Please provide a valid email address.').transform((v) => v.trim().toLowerCase()),
+  phone: phoneSchema,
   role: z.enum(['ADMIN', 'USER']).default('USER'),
 });
 
@@ -13,6 +22,7 @@ const updateUserSchema = z.object({
   id: z.string().trim().uuid('Invalid user id.'),
   name: z.string().trim().min(1, 'Name is required.'),
   email: z.email('Please provide a valid email address.').transform((v) => v.trim().toLowerCase()),
+  phone: phoneSchema,
   role: z.enum(['ADMIN', 'USER']).optional(),
 });
 
@@ -47,7 +57,7 @@ export async function GET() {
     const users = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
       select: {
-        id: true, name: true, email: true, createdAt: true,
+        id: true, name: true, email: true, phone: true, createdAt: true,
         rolePermission: { select: { role: true } },
       },
     });
@@ -55,7 +65,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        users: users.map((u: { id: string; name: string; email: string; createdAt: Date; rolePermission: { role: string } }) => ({ id: u.id, name: u.name, email: u.email, createdAt: u.createdAt, role: u.rolePermission.role })),
+        users: users.map((u: { id: string; name: string; email: string; phone: string | null; createdAt: Date; rolePermission: { role: string } }) => ({ id: u.id, name: u.name, email: u.email, phone: u.phone, createdAt: u.createdAt, role: u.rolePermission.role })),
       },
     });
   } catch (error) {
@@ -75,6 +85,7 @@ export async function POST(request: Request) {
     }
 
     const { name, email, role } = parsed.data;
+    const phone = parsed.data.phone?.trim() || null;
 
     const existingUser = await prisma.user.findUnique({ where: { email }, select: { id: true } });
     if (existingUser) {
@@ -109,10 +120,11 @@ export async function POST(request: Request) {
         id: authData.user.id,
         name,
         email,
+        phone,
         emailVerified: false,
         rolePermissionId: rolePermission.id,
       },
-      select: { id: true, name: true, email: true, createdAt: true },
+      select: { id: true, name: true, email: true, phone: true, createdAt: true },
     });
 
     return NextResponse.json({ success: true, data: { user: { ...user, role } } }, { status: 201 });
@@ -133,6 +145,7 @@ export async function PATCH(request: Request) {
     }
 
     const { id, name, email, role } = parsed.data;
+    const phone = parsed.data.phone?.trim() || null;
 
     const user = await prisma.user.findUnique({ where: { id }, select: { id: true } });
     if (!user) return NextResponse.json({ success: false, error: 'User not found.', code: 'USER_NOT_FOUND' }, { status: 404 });
@@ -158,8 +171,8 @@ export async function PATCH(request: Request) {
 
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { name, email, ...(rolePermissionId && { rolePermissionId }) },
-      select: { id: true, name: true, email: true, createdAt: true, rolePermission: { select: { role: true } } },
+      data: { name, email, phone, ...(rolePermissionId && { rolePermissionId }) },
+      select: { id: true, name: true, email: true, phone: true, createdAt: true, rolePermission: { select: { role: true } } },
     });
 
     return NextResponse.json({ success: true, data: { user: { ...updatedUser, role: updatedUser.rolePermission.role } } });

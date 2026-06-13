@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { createTransporter } from "@/lib/mailer";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp";
+
+// Meta template body/header variables may not be empty — fall back to a placeholder.
+const waSafe = (v: string | null | undefined) => (v && v.trim() ? v.trim() : "N/A");
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -23,7 +27,7 @@ export async function GET(req: NextRequest) {
         agenda: true,
         meetingDate: true,
         lead: { select: { id: true, customerName: true, contactNumber: true, city: true } },
-        user: { select: { name: true, email: true } },
+        user: { select: { name: true, email: true, phone: true } },
       },
     });
 
@@ -125,13 +129,50 @@ export async function GET(req: NextRequest) {
         html,
       });
 
+      // Also send a WhatsApp reminder to the salesperson, if they have a phone on file
+      const sentTo = [...recipients];
+      if (meeting.user?.phone) {
+        try {
+          const waRes = await sendWhatsAppTemplate(
+            meeting.user.phone,
+            "meeting_reminder",
+            "en",
+            [
+              // Header: {{1}} = minutes remaining
+              { type: "header", parameters: [{ type: "text", text: String(minsRemaining) }] },
+              // Body: {{1}}..{{6}}
+              {
+                type: "body",
+                parameters: [
+                  { type: "text", text: assignedName },
+                  { type: "text", text: waSafe(meeting.lead.customerName) },
+                  { type: "text", text: waSafe(meeting.lead.contactNumber) },
+                  { type: "text", text: waSafe(meeting.lead.city) },
+                  { type: "text", text: meetingTimeIST },
+                  { type: "text", text: waSafe(meeting.agenda) },
+                ],
+              },
+              // URL button: {{1}} = lead id (appended to the template's base URL)
+              { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: meeting.lead.id }] },
+            ]
+          );
+          if (waRes.error) {
+            console.error("Meeting reminder WhatsApp error:", waRes.error);
+          } else {
+            sentTo.push(`whatsapp:${meeting.user.phone}`);
+          }
+        } catch (waErr) {
+          console.error("Meeting reminder WhatsApp send failed:", waErr);
+        }
+      }
+
       // Mark as reminded so we never send twice
       await prisma.meeting.update({
         where: { id: meeting.id },
         data: { reminderSent: true },
       });
 
-      results.push({ meeting: meeting.lead.customerName, sentTo: recipients });
+      results.push({ meeting: meeting.lead.customerName, sentTo });
     }
 
     return NextResponse.json({
