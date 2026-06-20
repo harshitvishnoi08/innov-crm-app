@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, Users, Settings, UserCheck, Calendar, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Users, Settings, UserCheck, Calendar, MessageCircle, MessageSquareText } from "lucide-react";
 
 export type NavSubItem = {
   title: string;
@@ -45,6 +45,11 @@ export function getCurrentAppConfig(user: unknown) {
         title: "WhatsApp",
         url: "/whatsapp",
         icon: MessageCircle,
+      },
+      {
+        title: "Message Templates",
+        url: "/whatsapp-templates",
+        icon: MessageSquareText,
       },
       {
         title: "Settings",

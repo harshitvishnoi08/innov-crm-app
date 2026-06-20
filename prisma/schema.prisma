@@ -287,6 +287,20 @@ model WhatsAppTemplateRule {
   @@map("whatsapp_template_rules")
 }
 
+// Editable click-to-chat quick messages shown in the lead WhatsApp menu.
+// Supports a {{name}} placeholder replaced with the lead's customer name.
+model WhatsAppQuickTemplate {
+  id        String   @id @default(cuid())
+  title     String
+  body      String   @db.Text
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@map("whatsapp_quick_templates")
+}
+
 model WhatsAppMessage {
   id            String    @id @default(cuid())
   leadId        String

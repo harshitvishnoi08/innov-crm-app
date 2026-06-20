@@ -2,6 +2,15 @@ export function normalizeWhatsAppPhone(phone: string): string {
   return phone.replace(/\D/g, '');
 }
 
+/**
+ * Replace template placeholders with lead values. Supports {{name}} (and the
+ * common typo {{ name }}), case-insensitive. Unknown name falls back to "there".
+ */
+export function applyTemplateVars(body: string, vars: { name?: string | null }): string {
+  const name = vars.name?.trim() || 'there';
+  return body.replace(/\{\{\s*name\s*\}\}/gi, name);
+}
+
 export function buildFollowUpMessage(customerName?: string | null): string {
   const greeting = customerName?.trim()
     ? `Hi ${customerName.trim()},`

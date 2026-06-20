@@ -7,7 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { buildWhatsAppFollowUpUrl, buildWhatsAppUrl } from '@/lib/whatsapp-link';
+import { buildWhatsAppFollowUpUrl, buildWhatsAppUrl, applyTemplateVars } from '@/lib/whatsapp-link';
+import { useQuickTemplatesQuery } from '@/queries/whatsapp-templates';
 import { cn } from '@/lib/utils';
 import { MessageSquare, MessageSquareDashed } from 'lucide-react';
 
@@ -28,8 +29,9 @@ export function WhatsAppLinkMenu({
   className,
   onClick,
 }: WhatsAppLinkMenuProps) {
+  const { data: templates } = useQuickTemplatesQuery();
+  const activeTemplates = (templates ?? []).filter(t => t.isActive);
   const blankUrl = buildWhatsAppUrl(phone);
-  const followUpUrl = buildWhatsAppFollowUpUrl(phone, customerName);
 
   const openLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -72,15 +74,31 @@ export function WhatsAppLinkMenu({
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[200px]">
-        <DropdownMenuItem
-          onClick={e => {
-            e.stopPropagation();
-            openLink(followUpUrl);
-          }}
-        >
-          <MessageSquare className="h-4 w-4" />
-          Follow-up template
-        </DropdownMenuItem>
+        {activeTemplates.length > 0 ? (
+          activeTemplates.map(t => (
+            <DropdownMenuItem
+              key={t.id}
+              onClick={e => {
+                e.stopPropagation();
+                openLink(buildWhatsAppUrl(phone, applyTemplateVars(t.body, { name: customerName })));
+              }}
+            >
+              <MessageSquare className="h-4 w-4" />
+              {t.title}
+            </DropdownMenuItem>
+          ))
+        ) : (
+          // Fallback to the built-in follow-up message when no templates exist yet.
+          <DropdownMenuItem
+            onClick={e => {
+              e.stopPropagation();
+              openLink(buildWhatsAppFollowUpUrl(phone, customerName));
+            }}
+          >
+            <MessageSquare className="h-4 w-4" />
+            Follow-up template
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={e => {
             e.stopPropagation();
