@@ -142,6 +142,8 @@ model Lead {
   assignedTo        String?          @db.Uuid
   leadCreatedDate   DateTime         @db.Timestamptz
   followUpDate      DateTime?        @db.Timestamptz
+  followUpHasTime   Boolean          @default(false)
+  followUpReminderSent Boolean       @default(false)
   propertyType      String?
   serviceRequired   String?
   briefScope        String?          @db.Text

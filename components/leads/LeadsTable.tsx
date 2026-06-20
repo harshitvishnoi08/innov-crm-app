@@ -736,6 +736,7 @@ export function LeadsTable() {
                         <LeadStatusCell
                           status={leadStatus || ''}
                           followUpDate={(lead.followUpDate as string) || null}
+                          followUpHasTime={!!lead.followUpHasTime}
                           onPatch={data => handleInlinePatch(lead.id as string, data)}
                           triggerClassName="h-7 w-auto min-w-[110px] border-dashed text-xs"
                         />
@@ -842,6 +843,7 @@ export function LeadsTable() {
                           <LeadStatusCell
                             status={(lead.status as string) || ''}
                             followUpDate={(lead.followUpDate as string) || null}
+                            followUpHasTime={!!lead.followUpHasTime}
                             onPatch={data => handleInlinePatch(lead.id as string, data)}
                             triggerClassName="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none"
                           />

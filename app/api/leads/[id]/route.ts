@@ -95,7 +95,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(role === "ADMIN" && body.assignedTo !== undefined && { assignedTo: body.assignedTo || null }),
       ...(body.followUpDate !== undefined && {
         followUpDate: body.followUpDate ? new Date(body.followUpDate) : null,
+        // A new/changed follow-up date re-arms the time-based WhatsApp reminder.
+        followUpReminderSent: false,
       }),
+      ...(body.followUpHasTime !== undefined && { followUpHasTime: !!body.followUpHasTime }),
       ...(body.propertyType !== undefined && { propertyType: body.propertyType }),
       ...(body.briefScope !== undefined && { briefScope: body.briefScope }),
       ...(body.budgetRange !== undefined && { budgetRange: body.budgetRange }),
