@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Search, Plus, Trash2, ChevronRight, X, Download, Phone, ChevronLeft, CheckSquare } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { WhatsAppLinkMenu } from '@/components/leads/WhatsAppLinkMenu';
+import { LeadStatusCell } from '@/components/leads/LeadStatusCell';
 import { DateCreatedFilter, dateCreatedLabel } from '@/components/leads/DateCreatedFilter';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -385,14 +386,17 @@ export function LeadsTable() {
     }
   };
 
-  const handleInlineUpdate = async (id: string, field: string, value: string) => {
+  const handleInlinePatch = async (id: string, data: Record<string, unknown>) => {
     await fetch(`/api/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [field]: value }),
+      body: JSON.stringify(data),
     });
     void refetch();
   };
+
+  const handleInlineUpdate = (id: string, field: string, value: string) =>
+    handleInlinePatch(id, { [field]: value });
 
   return (
     <>
@@ -729,17 +733,12 @@ export function LeadsTable() {
                         className="flex flex-1 flex-wrap items-center gap-2"
                         onClick={e => e.stopPropagation()}
                       >
-                        <Select
-                          value={leadStatus || ''}
-                          onValueChange={v => handleInlineUpdate(lead.id as string, 'status', v)}
-                        >
-                          <SelectTrigger className="h-7 w-auto min-w-[110px] border-dashed text-xs">
-                            <SelectValue placeholder="Set status..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <LeadStatusCell
+                          status={leadStatus || ''}
+                          followUpDate={(lead.followUpDate as string) || null}
+                          onPatch={data => handleInlinePatch(lead.id as string, data)}
+                          triggerClassName="h-7 w-auto min-w-[110px] border-dashed text-xs"
+                        />
                         <Select
                           value={active || ''}
                           onValueChange={v => handleInlineUpdate(lead.id as string, 'activeStatus', v)}
@@ -840,17 +839,12 @@ export function LeadsTable() {
                         </TableCell>
 
                         <TableCell onClick={e => e.stopPropagation()}>
-                          <Select
-                            value={(lead.status as string) || ''}
-                            onValueChange={v => handleInlineUpdate(lead.id as string, 'status', v)}
-                          >
-                            <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
-                              <SelectValue placeholder="—" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          <LeadStatusCell
+                            status={(lead.status as string) || ''}
+                            followUpDate={(lead.followUpDate as string) || null}
+                            onPatch={data => handleInlinePatch(lead.id as string, data)}
+                            triggerClassName="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none"
+                          />
                         </TableCell>
 
                         <TableCell onClick={e => e.stopPropagation()}>
