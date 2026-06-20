@@ -20,13 +20,13 @@ const STATUS_OPTIONS = [
   { value: 'JUNK', label: 'Junk' },
 ];
 
-// Statuses that require a follow-up date+time before they can be saved.
+// Statuses that can carry an optional follow-up date+time for a reminder.
 const DATED_STATUSES = new Set(['FOLLOW_UP', 'CONTACT_IN_FUTURE']);
 const IST = 'Asia/Kolkata';
 
 // Build an unambiguous ISO string pinned to IST so the server stores the exact instant.
 function buildFollowUpISO(ymd: string, time: string) {
-  return time ? `${ymd}T${time}:00+05:30` : `${ymd}T00:00:00+05:30`;
+  return `${ymd}T${time}:00+05:30`;
 }
 
 // Extract the IST "HH:mm" from a stored timestamp (for re-editing an existing time).
@@ -34,7 +34,7 @@ function istTime(date: Date) {
   return date.toLocaleTimeString('en-GB', { timeZone: IST, hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-// Chip label: "25 Jun" for date-only, "25 Jun · 4:30 PM" when a time is set.
+// Chip label: "25 Jun · 4:30 PM" when a time is set, else just the date.
 function chipLabel(date: Date, hasTime: boolean) {
   const d = date.toLocaleDateString('en-IN', { timeZone: IST, day: 'numeric', month: 'short' });
   if (!hasTime) return d;
@@ -53,69 +53,47 @@ type Props = {
 };
 
 export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch, triggerClassName }: Props) {
-  // When a dated status is chosen, hold it here until the date is saved (required).
-  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [draftDate, setDraftDate] = useState<Date | undefined>(undefined);
   const [draftTime, setDraftTime] = useState('');
 
   const isDated = DATED_STATUSES.has(status);
   const existingDate = followUpDate ? new Date(followUpDate) : undefined;
-  // While the picker is open for a brand-new dated status, reflect it in the trigger.
-  const shownStatus = pendingStatus ?? status;
-
-  function seedDraft() {
-    setDraftDate(existingDate);
-    // Time is required — default new follow-ups to 10:00, or reuse the saved time.
-    setDraftTime(existingDate && followUpHasTime ? istTime(existingDate) : '10:00');
-  }
-
-  // Open on the next tick so the Select fully closes first — opening synchronously
-  // from the Select's change handler lets its closing event dismiss the dialog.
-  function openPicker() {
-    setTimeout(() => setOpen(true), 0);
-  }
 
   function handleStatusChange(next: string) {
     if (next === status) return;
     if (DATED_STATUSES.has(next)) {
-      // Don't commit yet — require a date+time first.
-      setPendingStatus(next);
-      seedDraft();
-      openPicker();
+      // Set the status right away — adding a follow-up date/time is optional.
+      onPatch({ status: next });
     } else {
-      // Leaving a dated status clears the stale follow-up date so no reminder fires.
+      // Leaving a dated status clears any follow-up date so no reminder fires.
       onPatch(isDated ? { status: next, followUpDate: null, followUpHasTime: false } : { status: next });
     }
   }
 
   function openForEdit() {
-    setPendingStatus(null);
-    seedDraft();
+    setDraftDate(existingDate);
+    setDraftTime(existingDate && followUpHasTime ? istTime(existingDate) : '10:00');
     setOpen(true);
   }
 
   function handleSave() {
     if (!draftDate || !draftTime) return;
-    const iso = buildFollowUpISO(format(draftDate, 'yyyy-MM-dd'), draftTime);
     onPatch({
-      followUpDate: iso,
-      followUpHasTime: !!draftTime,
-      ...(pendingStatus ? { status: pendingStatus } : {}),
+      followUpDate: buildFollowUpISO(format(draftDate, 'yyyy-MM-dd'), draftTime),
+      followUpHasTime: true,
     });
-    setPendingStatus(null);
     setOpen(false);
   }
 
-  function handleOpenChange(next: boolean) {
-    // Closing without saving drops the pending status (date is required → nothing commits).
-    if (!next) setPendingStatus(null);
-    setOpen(next);
+  function handleRemove() {
+    onPatch({ followUpDate: null, followUpHasTime: false });
+    setOpen(false);
   }
 
   return (
     <div className="flex w-full items-center gap-1.5">
-      <Select value={shownStatus || ''} onValueChange={handleStatusChange}>
+      <Select value={status || ''} onValueChange={handleStatusChange}>
         <SelectTrigger className={triggerClassName}>
           <SelectValue placeholder="—" />
         </SelectTrigger>
@@ -126,11 +104,11 @@ export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch,
         </SelectContent>
       </Select>
 
-      {/* Chip shows/edits the saved follow-up date+time once the status is dated. */}
+      {/* Optional follow-up reminder chip — only on dated statuses. */}
       {isDated && (
         <button
           type="button"
-          title={existingDate ? 'Change follow-up date/time' : 'Set follow-up date/time'}
+          title={existingDate ? 'Change follow-up reminder' : 'Add an optional follow-up reminder'}
           onClick={e => { e.stopPropagation(); openForEdit(); }}
           className={cn(
             'inline-flex h-7 shrink-0 items-center gap-1 rounded-md border px-1.5 text-xs whitespace-nowrap',
@@ -144,12 +122,12 @@ export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch,
         </button>
       )}
 
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-xs" onClick={e => e.stopPropagation()}>
           <DialogHeader>
-            <DialogTitle>Set follow-up date &amp; time</DialogTitle>
+            <DialogTitle>Follow-up reminder</DialogTitle>
             <DialogDescription>
-              Pick when to be reminded. Both date and time are required.
+              Optional — pick a date and time to get a WhatsApp reminder. Leave it off if you don&apos;t need one.
             </DialogDescription>
           </DialogHeader>
 
@@ -163,10 +141,9 @@ export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch,
               autoFocus
             />
             <label className="flex w-full items-center justify-between gap-2 text-sm">
-              <span>Time<span className="text-red-500"> *</span></span>
+              <span>Time</span>
               <input
                 type="time"
-                required
                 value={draftTime}
                 onChange={e => setDraftTime(e.target.value)}
                 className="rounded-md border bg-transparent px-2 py-1 text-sm"
@@ -175,7 +152,9 @@ export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch,
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+            {existingDate && (
+              <Button variant="outline" onClick={handleRemove}>Remove</Button>
+            )}
             <Button disabled={!draftDate || !draftTime} onClick={handleSave}>Save</Button>
           </DialogFooter>
         </DialogContent>
