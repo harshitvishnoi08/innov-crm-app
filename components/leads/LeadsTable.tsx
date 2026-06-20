@@ -777,7 +777,7 @@ export function LeadsTable() {
                       <TableHead className="w-[180px]">Customer</TableHead>
                       <TableHead className="w-[170px]">Phone</TableHead>
                       <TableHead className="w-[130px]">Assignee</TableHead>
-                      <TableHead className="w-[150px]">Status</TableHead>
+                      <TableHead className="w-[200px]">Status</TableHead>
                       <TableHead className="w-[90px]">Temp</TableHead>
                       <TableHead className="w-[110px]">City</TableHead>
                       <TableHead className="w-[130px]">Property</TableHead>
@@ -845,7 +845,7 @@ export function LeadsTable() {
                             followUpDate={(lead.followUpDate as string) || null}
                             followUpHasTime={!!lead.followUpHasTime}
                             onPatch={data => handleInlinePatch(lead.id as string, data)}
-                            triggerClassName="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none"
+                            triggerClassName="h-7 min-w-0 flex-1 border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none"
                           />
                         </TableCell>
 

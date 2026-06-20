@@ -101,7 +101,7 @@ export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch,
   }
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex w-full items-center gap-1.5">
       <Select value={shownStatus || ''} onValueChange={handleStatusChange}>
         <SelectTrigger className={triggerClassName}>
           <SelectValue placeholder="—" />
@@ -127,8 +127,8 @@ export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch,
                   : 'border-dashed text-muted-foreground',
               )}
             >
-              <CalendarClock className="h-3.5 w-3.5" />
-              {existingDate ? chipLabel(existingDate, followUpHasTime) : 'Set date'}
+              <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+              {existingDate && <span>{chipLabel(existingDate, followUpHasTime)}</span>}
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto p-0">
