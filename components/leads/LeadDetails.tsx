@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Send, Calendar, X, UserPlus, Trash2, Phone, Pencil, MessageCircle } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 import { WhatsAppLinkMenu } from '@/components/leads/WhatsAppLinkMenu';
+import { LeadStatusCell } from '@/components/leads/LeadStatusCell';
 import { toast } from 'sonner';
 import { WhatsAppChat } from '@/components/leads/WhatsAppChat';
 import { getActivityLabel, isSystemActivity } from '@/components/leads/activity-labels';
@@ -389,22 +390,13 @@ export function LeadDetail({ id }: { id: string }) {
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Lead Status</Label>
-                <Select
-                  value={(lead.status as string) || ''}
-                  onValueChange={v => updateLead.mutate({ status: v })}
-                >
-                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NEW">New</SelectItem>
-                    <SelectItem value="FOLLOW_UP">Follow Up</SelectItem>
-                    <SelectItem value="NOT_ANSWERED">Not Answered</SelectItem>
-                    <SelectItem value="MEETING_FIXED">Meeting Fixed</SelectItem>
-                    <SelectItem value="CONTACT_IN_FUTURE">Contact in Future</SelectItem>
-                    <SelectItem value="CLOSED_WON">Closed Won ✅</SelectItem>
-                    <SelectItem value="CLOSED_LOST">Closed Lost ❌</SelectItem>
-                    <SelectItem value="JUNK">Junk 🗑️</SelectItem>
-                  </SelectContent>
-                </Select>
+                <LeadStatusCell
+                  status={(lead.status as string) || ''}
+                  followUpDate={(lead.followUpDate as string) || null}
+                  followUpHasTime={!!lead.followUpHasTime}
+                  onPatch={data => updateLead.mutate(data)}
+                  triggerClassName="h-9 min-w-0 flex-1"
+                />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Active Status</Label>
