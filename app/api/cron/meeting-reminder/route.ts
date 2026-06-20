@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { createTransporter } from "@/lib/mailer";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp";
+import { runFollowUpReminders } from "@/lib/followUpReminder";
 
 // Meta template body/header variables may not be empty — fall back to a placeholder.
 const waSafe = (v: string | null | undefined) => (v && v.trim() ? v.trim() : "N/A");
@@ -13,6 +14,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Same cron also drives timed follow-up WhatsApp reminders (isolated so a
+    // failure here never blocks meeting reminders).
+    let followUps: { lead: string; sentTo: string }[] = [];
+    try {
+      followUps = await runFollowUpReminders();
+    } catch (followUpErr) {
+      console.error("Follow-up reminders failed:", followUpErr);
+    }
+
     const now = new Date();
     const in30Min = new Date(now.getTime() + 30 * 60 * 1000);
 
@@ -32,7 +42,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (meetings.length === 0) {
-      return NextResponse.json({ success: true, message: "No upcoming meetings" });
+      return NextResponse.json({ success: true, message: "No upcoming meetings", followUps });
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -178,6 +188,7 @@ export async function GET(req: NextRequest) {
       success: true,
       message: `Sent ${results.length} reminder(s)`,
       results,
+      followUps,
     });
   } catch (error) {
     console.error("Meeting reminder cron error:", error);

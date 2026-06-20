@@ -66,7 +66,8 @@ export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch,
 
   function seedDraft() {
     setDraftDate(existingDate);
-    setDraftTime(existingDate && followUpHasTime ? istTime(existingDate) : '');
+    // Time is required — default new follow-ups to 10:00, or reuse the saved time.
+    setDraftTime(existingDate && followUpHasTime ? istTime(existingDate) : '10:00');
   }
 
   function handleStatusChange(next: string) {
@@ -142,28 +143,23 @@ export function LeadStatusCell({ status, followUpDate, followUpHasTime, onPatch,
             />
             <div className="space-y-2 border-t p-3">
               <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                <span>Time (optional)</span>
+                <span>Time<span className="text-red-500"> *</span></span>
                 <input
                   type="time"
+                  required
                   value={draftTime}
                   onChange={e => setDraftTime(e.target.value)}
                   className="rounded-md border bg-transparent px-2 py-1 text-xs"
                 />
               </label>
-              <div className="flex items-center justify-between gap-2">
-                {draftTime ? (
-                  <button
-                    type="button"
-                    onClick={() => setDraftTime('')}
-                    className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-                  >
-                    Clear time
-                  </button>
-                ) : <span />}
-                <Button size="sm" className="h-7 text-xs" disabled={!draftDate} onClick={handleSave}>
-                  Save
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                className="h-7 w-full text-xs"
+                disabled={!draftDate || !draftTime}
+                onClick={handleSave}
+              >
+                Save
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
