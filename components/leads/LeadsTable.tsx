@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useLeadsQuery, useLeadsMetaQuery, useCreateLead, usePrefetchLead } from '@/queries/leads';
+import { useLeadsQuery, useLeadsMetaQuery, useCreateLead, usePrefetchLead, type LeadsResponse } from '@/queries/leads';
+import { useQueryClient } from '@tanstack/react-query';
 import { useUsersQuery } from '@/queries/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -146,6 +147,7 @@ export function LeadsTable() {
   const searchParams = useSearchParams();
   const authUser = useAuth();
   const prefetchLead = usePrefetchLead();
+  const queryClient = useQueryClient();
   const isAdmin = authUser?.role === 'ADMIN';
   // Initialise all filters/page from the URL so state survives navigating into a
   // lead and pressing back (the browser restores the query string).
@@ -387,12 +389,28 @@ export function LeadsTable() {
   };
 
   const handleInlinePatch = async (id: string, data: Record<string, unknown>) => {
-    await fetch(`/api/leads/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+    // Optimistically patch the row in every cached leads list so the dropdown/
+    // chip updates instantly instead of waiting on the network + a full refetch.
+    const snapshots = queryClient.getQueriesData<LeadsResponse>({ queryKey: ['leads', 'list'] });
+    queryClient.setQueriesData<LeadsResponse>({ queryKey: ['leads', 'list'] }, (old) => {
+      if (!old?.data) return old;
+      return { ...old, data: old.data.map((l) => ((l as { id?: string }).id === id ? { ...l, ...data } : l)) };
     });
-    void refetch();
+
+    try {
+      const res = await fetch(`/api/leads/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Update failed');
+      // Reconcile server-derived fields (e.g. assignee name) in the background.
+      void queryClient.invalidateQueries({ queryKey: ['leads', 'list'] });
+    } catch {
+      // Roll back the optimistic change and tell the user.
+      for (const [key, value] of snapshots) queryClient.setQueryData(key, value);
+      toast.error('Could not update the lead. Please try again.');
+    }
   };
 
   const handleInlineUpdate = (id: string, field: string, value: string) =>
