@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
                 "https://graph.facebook.com/v19.0/" + leadgenId + "?fields=field_data,platform,created_time&access_token=" + accessToken
               ),
               fetch(
-                "https://graph.facebook.com/v19.0/" + formId + "?fields=name&access_token=" + accessToken
+                "https://graph.facebook.com/v19.0/" + formId + "?fields=name,questions&access_token=" + accessToken
               ),
             ]);
 
@@ -57,9 +57,27 @@ export async function POST(req: NextRequest) {
             }
 
             if (leadData.field_data) {
+              // Map each multiple-choice question's option KEY -> human label.
+              // Meta sends the option key in field_data (e.g. "50_lakh_-_1_crore_"),
+              // which can drift from the label shown to the user when the form is
+              // edited in place. Translating to the label stores what the customer
+              // actually saw/selected and cleans up the slug-style values.
+              type FormOption = { key: string; value: string };
+              type FormQuestion = { key: string; options?: FormOption[] };
+              const questionsByKey: Record<string, FormOption[]> = {};
+              for (const q of (formData.questions ?? []) as FormQuestion[]) {
+                if (q.key && Array.isArray(q.options)) questionsByKey[q.key] = q.options;
+              }
+              const humanize = (fieldName: string, rawValue: string): string => {
+                const options = questionsByKey[fieldName];
+                if (!options) return rawValue; // free-text fields (name, phone, etc.)
+                const match = options.find(o => o.key === rawValue || o.value === rawValue);
+                return match?.value ?? rawValue;
+              };
+
               const fields: Record<string, string> = {};
               for (const field of leadData.field_data) {
-                fields[field.name] = field.values[0];
+                fields[field.name] = humanize(field.name, field.values[0]);
               }
 
               console.log("Parsed fields:", JSON.stringify(fields));
