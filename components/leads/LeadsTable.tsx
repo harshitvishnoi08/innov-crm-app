@@ -733,7 +733,14 @@ export function LeadsTable() {
   // inline edit) doesn't re-render every other row.
   const prefetchLeadRef = useRef(prefetchLead);
   prefetchLeadRef.current = prefetchLead;
-  const onPrefetch = useCallback((id: string) => prefetchLeadRef.current(id), []);
+  // On hover warm BOTH the lead data (React Query) and the detail route itself
+  // (its RSC payload + JS chunk). Rows navigate via router.push(), which — unlike
+  // <Link> — doesn't prefetch the route, so without this the click still
+  // round-trips for the route even when the data is already cached.
+  const onPrefetch = useCallback((id: string) => {
+    prefetchLeadRef.current(id);
+    router.prefetch(`/admin/leads/${id}`);
+  }, [router]);
   const onOpen = useCallback((id: string) => router.push(`/admin/leads/${id}`), [router]);
 
   return (
