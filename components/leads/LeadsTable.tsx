@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useLeadsQuery, useLeadsMetaQuery, useCreateLead, usePrefetchLead, type LeadsResponse } from '@/queries/leads';
+import { useLeadsQuery, useLeadsMetaQuery, useCreateLead, usePrefetchLead, leadQueryKeys, type LeadsResponse } from '@/queries/leads';
+import { fetchLeads } from '@/services/leads.service';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUsersQuery } from '@/queries/users';
 import { Button } from '@/components/ui/button';
@@ -141,6 +142,287 @@ function LeadsTableSkeleton() {
   );
 }
 
+type LeadRowProps = {
+  lead: Record<string, unknown>;
+  isSelected: boolean;
+  isAdmin: boolean;
+  users: { id: string; name: string }[];
+  onOpen: (id: string) => void;
+  onPrefetch: (id: string) => void;
+  onToggleSelect: (id: string) => void;
+  onInlinePatch: (id: string, data: Record<string, unknown>) => void;
+  onInlineUpdate: (id: string, field: string, value: string) => void;
+  onDelete: (id: string) => void;
+};
+
+// Memoised so a change to one row (selection, inline edit) only re-renders that
+// row, not the whole list — important at large page sizes where each row mounts
+// several Radix selects.
+const MobileLeadCard = React.memo(function MobileLeadCard({
+  lead, isSelected, isAdmin, users, onOpen, onPrefetch, onToggleSelect, onInlinePatch, onInlineUpdate, onDelete,
+}: LeadRowProps) {
+  const id = lead.id as string;
+  const temp = lead.temperature as string;
+  const leadStatus = lead.status as string;
+  const active = lead.activeStatus as string;
+  return (
+    <Card
+      className={`overflow-hidden gap-0 py-0 cursor-pointer transition-all duration-150 hover:bg-muted/30 active:bg-muted/50 ${isSelected ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/20' : ''}`}
+      onMouseEnter={() => onPrefetch(id)}
+      onClick={() => onOpen(id)}
+    >
+      <CardContent className="p-4">
+        {/* Row 1: checkbox + name + temp + delete */}
+        <div className="flex items-start gap-2">
+          <div className="pt-1 shrink-0" onClick={e => e.stopPropagation()}>
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect(id)}
+              className="size-5 border-2 border-muted-foreground/50 transition-all duration-150 data-[state=checked]:border-primary data-[state=checked]:scale-105"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold leading-tight truncate">
+              {(lead.customerName as string) || 'Unnamed lead'}
+            </p>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground">
+                {(lead.contactNumber as string) || '—'}
+                {(lead.city as string) && (
+                  <span className="before:mx-1.5 before:content-['·']">{lead.city as string}</span>
+                )}
+              </span>
+              {(lead.contactNumber as string) && (
+                <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+                  <ContactButtons
+                    phone={lead.contactNumber as string}
+                    customerName={lead.customerName as string}
+                    size="sm"
+                  />
+                </div>
+              )}
+            </div>
+            {isAdmin && (
+              <div className="mt-0.5" onClick={e => e.stopPropagation()}>
+                <Select
+                  value={((lead.assignedUser as Record<string, string> | null)?.id) || '__none__'}
+                  onValueChange={v => onInlineUpdate(id, 'assignedTo', v === '__none__' ? '' : v)}
+                >
+                  <SelectTrigger className="h-6 w-auto border-0 bg-transparent p-0 text-xs text-muted-foreground focus:ring-0 gap-1">
+                    <SelectValue placeholder="Unassigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Unassigned</SelectItem>
+                    {users.map(u => (
+                      <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {!isAdmin && (lead.assignedUser as Record<string, string> | null)?.name && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {(lead.assignedUser as Record<string, string>).name}
+              </p>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {temp && (
+              <span className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${TEMP_COLOR[temp] ?? ''}`}>
+                {TEMP_EMOJI[temp]} {temp.charAt(0) + temp.slice(1).toLowerCase()}
+              </span>
+            )}
+            {isAdmin && (
+              <button
+                onClick={e => { e.stopPropagation(); onDelete(id); }}
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                title="Delete lead"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: property + source */}
+        {((lead.propertyType as string) || (lead.platform as string)) && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {(lead.propertyType as string) && (
+              <span className="text-xs text-muted-foreground">{lead.propertyType as string}</span>
+            )}
+            {(lead.platform as string) && (
+              <Badge variant="outline" className="text-xs">{lead.platform as string}</Badge>
+            )}
+          </div>
+        )}
+
+        {/* Remarks */}
+        {(lead.initialNotes as string) && (
+          <p className="mt-1.5 truncate text-xs text-muted-foreground italic">
+            {lead.initialNotes as string}
+          </p>
+        )}
+
+        {/* Row 3: inline status selects + nav arrow */}
+        <div className="mt-3 flex items-center gap-2">
+          <div
+            className="flex flex-1 flex-wrap items-center gap-2"
+            onClick={e => e.stopPropagation()}
+          >
+            <LeadStatusCell
+              status={leadStatus || ''}
+              followUpDate={(lead.followUpDate as string) || null}
+              followUpHasTime={!!lead.followUpHasTime}
+              onPatch={data => onInlinePatch(id, data)}
+              triggerClassName="h-7 w-auto min-w-[110px] border-dashed text-xs"
+            />
+            <Select
+              value={active || ''}
+              onValueChange={v => onInlineUpdate(id, 'activeStatus', v)}
+            >
+              <SelectTrigger className="h-7 w-auto min-w-[90px] border-dashed text-xs">
+                <SelectValue placeholder="Active..." />
+              </SelectTrigger>
+              <SelectContent>
+                {ACTIVE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+
+const DesktopLeadRow = React.memo(function DesktopLeadRow({
+  lead, isSelected, isAdmin, users, onOpen, onPrefetch, onToggleSelect, onInlinePatch, onInlineUpdate, onDelete,
+}: LeadRowProps) {
+  const id = lead.id as string;
+  return (
+    <TableRow
+      className={`cursor-pointer transition-colors duration-150 hover:bg-muted/50 ${isSelected ? 'bg-primary/10 hover:bg-primary/15' : ''}`}
+      onMouseEnter={() => onPrefetch(id)}
+      onClick={() => onOpen(id)}
+    >
+      <TableCell onClick={e => e.stopPropagation()}>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={() => onToggleSelect(id)}
+          className="size-[18px] border-2 border-muted-foreground/50 transition-all duration-150 data-[state=checked]:border-primary data-[state=checked]:scale-105"
+        />
+      </TableCell>
+      <TableCell className="font-medium truncate max-w-0">{(lead.customerName as string) || '—'}</TableCell>
+      <TableCell onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-0.5">
+          <span className="text-sm text-muted-foreground whitespace-nowrap mr-1">{(lead.contactNumber as string) || '—'}</span>
+          {(lead.contactNumber as string) && (
+            <ContactButtons
+              phone={lead.contactNumber as string}
+              customerName={lead.customerName as string}
+              size="sm"
+            />
+          )}
+        </div>
+      </TableCell>
+      <TableCell onClick={e => e.stopPropagation()}>
+        {isAdmin ? (
+          <Select
+            value={((lead.assignedUser as Record<string, string> | null)?.id) || '__none__'}
+            onValueChange={v => onInlineUpdate(id, 'assignedTo', v === '__none__' ? '' : v)}
+          >
+            <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
+              <SelectValue placeholder="Unassigned" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Unassigned</SelectItem>
+              {users.map(u => (
+                <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            {(lead.assignedUser as Record<string, string> | null)?.name ?? '—'}
+          </span>
+        )}
+      </TableCell>
+
+      <TableCell onClick={e => e.stopPropagation()}>
+        <LeadStatusCell
+          status={(lead.status as string) || ''}
+          followUpDate={(lead.followUpDate as string) || null}
+          followUpHasTime={!!lead.followUpHasTime}
+          onPatch={data => onInlinePatch(id, data)}
+          triggerClassName="h-7 min-w-0 flex-1 border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none"
+        />
+      </TableCell>
+
+      <TableCell onClick={e => e.stopPropagation()}>
+        <Select
+          value={(lead.temperature as string) || ''}
+          onValueChange={v => onInlineUpdate(id, 'temperature', v)}
+        >
+          <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
+            <SelectValue placeholder="—" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="HOT">🔥 Hot</SelectItem>
+            <SelectItem value="WARM">🌡️ Warm</SelectItem>
+            <SelectItem value="COLD">❄️ Cold</SelectItem>
+          </SelectContent>
+        </Select>
+      </TableCell>
+
+      <TableCell className="text-muted-foreground truncate max-w-0">{(lead.city as string) || '—'}</TableCell>
+      <TableCell className="text-muted-foreground truncate max-w-0">{(lead.propertyType as string) || '—'}</TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          {(lead.leadSource as string) && (
+            <span className="text-sm text-muted-foreground truncate">{lead.leadSource as string}</span>
+          )}
+          {(lead.platform as string) && (
+            <Badge variant="outline" className="text-xs shrink-0">
+              {lead.platform as string}
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+
+      <TableCell className="max-w-0 truncate text-sm text-muted-foreground" title={(lead.initialNotes as string) || ''}>
+        {(lead.initialNotes as string) || '—'}
+      </TableCell>
+
+      <TableCell className="text-muted-foreground text-xs">{formatDateTime(lead.createdAt as string)}</TableCell>
+
+      <TableCell onClick={e => e.stopPropagation()}>
+        <Select
+          value={(lead.activeStatus as string) || ''}
+          onValueChange={v => onInlineUpdate(id, 'activeStatus', v)}
+        >
+          <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
+            <SelectValue placeholder="—" />
+          </SelectTrigger>
+          <SelectContent>
+            {ACTIVE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </TableCell>
+      <TableCell onClick={e => e.stopPropagation()} className="text-right">
+        {isAdmin && (
+          <button
+            onClick={() => onDelete(id)}
+            className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+            title="Delete lead"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+});
+
 export function LeadsTable() {
   const router = useRouter();
   const pathname = usePathname();
@@ -151,6 +433,10 @@ export function LeadsTable() {
   const isAdmin = authUser?.role === 'ADMIN';
   // Initialise all filters/page from the URL so state survives navigating into a
   // lead and pressing back (the browser restores the query string).
+  // `searchInput` drives the text field immediately; `search` is the debounced
+  // value that actually triggers the query + URL sync, so typing doesn't fire a
+  // request (and reset the page) on every keystroke.
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('q') ?? '');
   const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
   const [status, setStatus] = useState(() => searchParams.get('status') ?? '');
   const [temperature, setTemperature] = useState(() => searchParams.get('temp') ?? '');
@@ -180,13 +466,13 @@ export function LeadsTable() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkUpdating, setBulkUpdating] = useState(false);
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = useCallback((id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
-  };
+  }, []);
 
   const toggleSelectAll = () => {
     const currentIds = leads.map((l: Record<string, unknown>) => l.id as string);
@@ -227,6 +513,14 @@ export function LeadsTable() {
     }
   };
 
+  // Debounce the search box into `search` so we issue at most one request after
+  // the user pauses typing, instead of one per keystroke.
+  useEffect(() => {
+    if (searchInput === search) return;
+    const t = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput, search]);
+
   // Reset to page 1 only when the filters/page-size genuinely CHANGE — compared
   // by value, not by render count. (A render-count guard is unreliable because
   // React Strict Mode double-invokes effects in dev, which would wrongly reset
@@ -241,8 +535,10 @@ export function LeadsTable() {
   }, [filterSig]);
 
   // Mirror filters + page into the URL query string so the state is preserved
-  // when the user opens a lead and navigates back. Uses replace() to avoid
-  // pushing a new history entry on every keystroke/filter change.
+  // when the user opens a lead and navigates back. Uses the native History API
+  // (which Next integrates with useSearchParams) instead of router.replace() so
+  // changing page/filters does NOT trigger a server round-trip / RSC refetch —
+  // that round-trip was the main source of pagination lag.
   useEffect(() => {
     const params = new URLSearchParams();
     if (search)          params.set('q', search);
@@ -257,17 +553,17 @@ export function LeadsTable() {
     if (page > 1)        params.set('page', String(page));
     if (pageSize !== 25) params.set('pageSize', String(pageSize));
     const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [search, status, temperature, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter, page, pageSize, pathname, router]);
+    window.history.replaceState(null, '', qs ? `${pathname}?${qs}` : pathname);
+  }, [search, status, temperature, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter, page, pageSize, pathname]);
 
   const { data: usersData } = useUsersQuery();
-  const users = (usersData ?? []) as { id: string; name: string }[];
+  const users = useMemo(() => (usersData ?? []) as { id: string; name: string }[], [usersData]);
 
   const { data: metaData } = useLeadsMetaQuery();
   const platforms = metaData?.platforms ?? [];
   const sources   = metaData?.sources   ?? [];
 
-  const { data, isLoading, isError, refetch } = useLeadsQuery({
+  const queryParams = useMemo(() => ({
     search:      search      || undefined,
     status:      status      || undefined,
     temperature: temperature || undefined,
@@ -279,15 +575,32 @@ export function LeadsTable() {
     followUp:    followUpFilter || undefined,
     page,
     pageSize,
-  });
+  }), [search, status, temperature, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter, page, pageSize]);
+
+  const { data, isLoading, isError, refetch } = useLeadsQuery(queryParams);
 
   const leads      = data?.data      ?? [];
   const pagination = data?.pagination;
 
+  // Warm the cache for the neighbouring pages so Prev/Next render instantly from
+  // cache instead of waiting on a fresh request each click.
+  useEffect(() => {
+    const totalPages = pagination?.totalPages ?? 1;
+    for (const target of [page + 1, page - 1]) {
+      if (target < 1 || target > totalPages || target === page) continue;
+      const params = { ...queryParams, page: target };
+      void queryClient.prefetchQuery({
+        queryKey: leadQueryKeys.list(params),
+        queryFn: () => fetchLeads(params),
+        staleTime: 1000 * 30,
+      });
+    }
+  }, [queryParams, page, pagination?.totalPages, queryClient]);
+
   const totalActiveFilters = [temperature, status, activeStatus, assigneeFilter, platformFilter, sourceFilter, dateFilter, followUpFilter].filter(Boolean).length;
 
   const clearAllFilters = () => {
-    setSearch(''); setStatus(''); setTemperature(''); setActiveStatus('');
+    setSearchInput(''); setSearch(''); setStatus(''); setTemperature(''); setActiveStatus('');
     setAssigneeFilter(''); setPlatformFilter(''); setSourceFilter(''); setDateFilter(''); setFollowUpFilter('');
   };
 
@@ -388,7 +701,7 @@ export function LeadsTable() {
     }
   };
 
-  const handleInlinePatch = async (id: string, data: Record<string, unknown>) => {
+  const handleInlinePatch = useCallback(async (id: string, data: Record<string, unknown>) => {
     // Optimistically patch the row in every cached leads list so the dropdown/
     // chip updates instantly instead of waiting on the network + a full refetch.
     const snapshots = queryClient.getQueriesData<LeadsResponse>({ queryKey: ['leads', 'list'] });
@@ -411,10 +724,17 @@ export function LeadsTable() {
       for (const [key, value] of snapshots) queryClient.setQueryData(key, value);
       toast.error('Could not update the lead. Please try again.');
     }
-  };
+  }, [queryClient]);
 
-  const handleInlineUpdate = (id: string, field: string, value: string) =>
-    handleInlinePatch(id, { [field]: value });
+  const handleInlineUpdate = useCallback((id: string, field: string, value: string) =>
+    handleInlinePatch(id, { [field]: value }), [handleInlinePatch]);
+
+  // Stable handlers passed to the memoised rows so toggling one row (selection,
+  // inline edit) doesn't re-render every other row.
+  const prefetchLeadRef = useRef(prefetchLead);
+  prefetchLeadRef.current = prefetchLead;
+  const onPrefetch = useCallback((id: string) => prefetchLeadRef.current(id), []);
+  const onOpen = useCallback((id: string) => router.push(`/admin/leads/${id}`), [router]);
 
   return (
     <>
@@ -458,8 +778,8 @@ export function LeadsTable() {
           <Input
             placeholder="Search by name or phone..."
             className="pl-9"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
           />
         </div>
 
@@ -641,141 +961,21 @@ export function LeadsTable() {
         <>
           {/* ── Mobile card list (hidden md+) ── */}
           <div className="md:hidden space-y-2">
-            {leads.map((lead: Record<string, unknown>) => {
-              const temp = lead.temperature as string;
-              const leadStatus = lead.status as string;
-              const active = lead.activeStatus as string;
-              const isSelected = selectedIds.has(lead.id as string);
-              return (
-                <Card
-                  key={lead.id as string}
-                  className={`overflow-hidden gap-0 py-0 cursor-pointer transition-all duration-150 hover:bg-muted/30 active:bg-muted/50 ${isSelected ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/20' : ''}`}
-                  onMouseEnter={() => prefetchLead(lead.id as string)}
-                  onClick={() => router.push(`/admin/leads/${lead.id}`)}
-                >
-                  <CardContent className="p-4">
-                    {/* Row 1: checkbox + name + temp + delete */}
-                    <div className="flex items-start gap-2">
-                      <div className="pt-1 shrink-0" onClick={e => e.stopPropagation()}>
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSelect(lead.id as string)}
-                          className="size-5 border-2 border-muted-foreground/50 transition-all duration-150 data-[state=checked]:border-primary data-[state=checked]:scale-105"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold leading-tight truncate">
-                          {(lead.customerName as string) || 'Unnamed lead'}
-                        </p>
-                        <div className="mt-0.5 flex items-center gap-1.5">
-                          <span className="text-sm text-muted-foreground">
-                            {(lead.contactNumber as string) || '—'}
-                            {(lead.city as string) && (
-                              <span className="before:mx-1.5 before:content-['·']">{lead.city as string}</span>
-                            )}
-                          </span>
-                          {(lead.contactNumber as string) && (
-                            <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-                              <ContactButtons
-                                phone={lead.contactNumber as string}
-                                customerName={lead.customerName as string}
-                                size="sm"
-                              />
-                            </div>
-                          )}
-                        </div>
-                        {isAdmin && (
-                          <div className="mt-0.5" onClick={e => e.stopPropagation()}>
-                            <Select
-                              value={((lead.assignedUser as Record<string, string> | null)?.id) || '__none__'}
-                              onValueChange={v => handleInlineUpdate(lead.id as string, 'assignedTo', v === '__none__' ? '' : v)}
-                            >
-                              <SelectTrigger className="h-6 w-auto border-0 bg-transparent p-0 text-xs text-muted-foreground focus:ring-0 gap-1">
-                                <SelectValue placeholder="Unassigned" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__none__">Unassigned</SelectItem>
-                                {users.map(u => (
-                                  <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        {!isAdmin && (lead.assignedUser as Record<string, string> | null)?.name && (
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {(lead.assignedUser as Record<string, string>).name}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1">
-                        {temp && (
-                          <span className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${TEMP_COLOR[temp] ?? ''}`}>
-                            {TEMP_EMOJI[temp]} {temp.charAt(0) + temp.slice(1).toLowerCase()}
-                          </span>
-                        )}
-                        {isAdmin && (
-                          <button
-                            onClick={e => { e.stopPropagation(); setDeleteId(lead.id as string); }}
-                            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                            title="Delete lead"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Row 2: property + source */}
-                    {((lead.propertyType as string) || (lead.platform as string)) && (
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                        {(lead.propertyType as string) && (
-                          <span className="text-xs text-muted-foreground">{lead.propertyType as string}</span>
-                        )}
-                        {(lead.platform as string) && (
-                          <Badge variant="outline" className="text-xs">{lead.platform as string}</Badge>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Remarks */}
-                    {(lead.initialNotes as string) && (
-                      <p className="mt-1.5 truncate text-xs text-muted-foreground italic">
-                        {lead.initialNotes as string}
-                      </p>
-                    )}
-
-                    {/* Row 3: inline status selects + nav arrow */}
-                    <div className="mt-3 flex items-center gap-2">
-                      <div
-                        className="flex flex-1 flex-wrap items-center gap-2"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <LeadStatusCell
-                          status={leadStatus || ''}
-                          followUpDate={(lead.followUpDate as string) || null}
-                          followUpHasTime={!!lead.followUpHasTime}
-                          onPatch={data => handleInlinePatch(lead.id as string, data)}
-                          triggerClassName="h-7 w-auto min-w-[110px] border-dashed text-xs"
-                        />
-                        <Select
-                          value={active || ''}
-                          onValueChange={v => handleInlineUpdate(lead.id as string, 'activeStatus', v)}
-                        >
-                          <SelectTrigger className="h-7 w-auto min-w-[90px] border-dashed text-xs">
-                            <SelectValue placeholder="Active..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ACTIVE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {leads.map((lead: Record<string, unknown>) => (
+              <MobileLeadCard
+                key={lead.id as string}
+                lead={lead}
+                isSelected={selectedIds.has(lead.id as string)}
+                isAdmin={isAdmin}
+                users={users}
+                onOpen={onOpen}
+                onPrefetch={onPrefetch}
+                onToggleSelect={toggleSelect}
+                onInlinePatch={handleInlinePatch}
+                onInlineUpdate={handleInlineUpdate}
+                onDelete={setDeleteId}
+              />
+            ))}
           </div>
 
           {/* ── Desktop table (hidden below md) ── */}
@@ -808,127 +1008,19 @@ export function LeadsTable() {
                   </TableHeader>
                   <TableBody>
                     {leads.map((lead: Record<string, unknown>) => (
-                      <TableRow
+                      <DesktopLeadRow
                         key={lead.id as string}
-                        className={`cursor-pointer transition-colors duration-150 hover:bg-muted/50 ${selectedIds.has(lead.id as string) ? 'bg-primary/10 hover:bg-primary/15' : ''}`}
-                        onMouseEnter={() => prefetchLead(lead.id as string)}
-                        onClick={() => router.push(`/admin/leads/${lead.id}`)}
-                      >
-                        <TableCell onClick={e => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedIds.has(lead.id as string)}
-                            onCheckedChange={() => toggleSelect(lead.id as string)}
-                            className="size-[18px] border-2 border-muted-foreground/50 transition-all duration-150 data-[state=checked]:border-primary data-[state=checked]:scale-105"
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium truncate max-w-0">{(lead.customerName as string) || '—'}</TableCell>
-                        <TableCell onClick={e => e.stopPropagation()}>
-                          <div className="flex items-center gap-0.5">
-                            <span className="text-sm text-muted-foreground whitespace-nowrap mr-1">{(lead.contactNumber as string) || '—'}</span>
-                            {(lead.contactNumber as string) && (
-                              <ContactButtons
-                                phone={lead.contactNumber as string}
-                                customerName={lead.customerName as string}
-                                size="sm"
-                              />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell onClick={e => e.stopPropagation()}>
-                          {isAdmin ? (
-                            <Select
-                              value={((lead.assignedUser as Record<string, string> | null)?.id) || '__none__'}
-                              onValueChange={v => handleInlineUpdate(lead.id as string, 'assignedTo', v === '__none__' ? '' : v)}
-                            >
-                              <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
-                                <SelectValue placeholder="Unassigned" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__none__">Unassigned</SelectItem>
-                                {users.map(u => (
-                                  <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">
-                              {(lead.assignedUser as Record<string, string> | null)?.name ?? '—'}
-                            </span>
-                          )}
-                        </TableCell>
-
-                        <TableCell onClick={e => e.stopPropagation()}>
-                          <LeadStatusCell
-                            status={(lead.status as string) || ''}
-                            followUpDate={(lead.followUpDate as string) || null}
-                            followUpHasTime={!!lead.followUpHasTime}
-                            onPatch={data => handleInlinePatch(lead.id as string, data)}
-                            triggerClassName="h-7 min-w-0 flex-1 border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none"
-                          />
-                        </TableCell>
-
-                        <TableCell onClick={e => e.stopPropagation()}>
-                          <Select
-                            value={(lead.temperature as string) || ''}
-                            onValueChange={v => handleInlineUpdate(lead.id as string, 'temperature', v)}
-                          >
-                            <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
-                              <SelectValue placeholder="—" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="HOT">🔥 Hot</SelectItem>
-                              <SelectItem value="WARM">🌡️ Warm</SelectItem>
-                              <SelectItem value="COLD">❄️ Cold</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        <TableCell className="text-muted-foreground truncate max-w-0">{(lead.city as string) || '—'}</TableCell>
-                        <TableCell className="text-muted-foreground truncate max-w-0">{(lead.propertyType as string) || '—'}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {(lead.leadSource as string) && (
-                              <span className="text-sm text-muted-foreground truncate">{lead.leadSource as string}</span>
-                            )}
-                            {(lead.platform as string) && (
-                              <Badge variant="outline" className="text-xs shrink-0">
-                                {lead.platform as string}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="max-w-0 truncate text-sm text-muted-foreground" title={(lead.initialNotes as string) || ''}>
-                          {(lead.initialNotes as string) || '—'}
-                        </TableCell>
-
-                        <TableCell className="text-muted-foreground text-xs">{formatDateTime(lead.createdAt as string)}</TableCell>
-
-                        <TableCell onClick={e => e.stopPropagation()}>
-                          <Select
-                            value={(lead.activeStatus as string) || ''}
-                            onValueChange={v => handleInlineUpdate(lead.id as string, 'activeStatus', v)}
-                          >
-                            <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
-                              <SelectValue placeholder="—" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {ACTIVE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell onClick={e => e.stopPropagation()} className="text-right">
-                          {isAdmin && (
-                            <button
-                              onClick={() => setDeleteId(lead.id as string)}
-                              className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                              title="Delete lead"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          )}
-                        </TableCell>
-                      </TableRow>
+                        lead={lead}
+                        isSelected={selectedIds.has(lead.id as string)}
+                        isAdmin={isAdmin}
+                        users={users}
+                        onOpen={onOpen}
+                        onPrefetch={onPrefetch}
+                        onToggleSelect={toggleSelect}
+                        onInlinePatch={handleInlinePatch}
+                        onInlineUpdate={handleInlineUpdate}
+                        onDelete={setDeleteId}
+                      />
                     ))}
                   </TableBody>
                 </Table>
