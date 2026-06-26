@@ -60,6 +60,7 @@ model User {
   whatsappMessages WhatsAppMessage[]
 
   @@index([email])
+  @@index([rolePermissionId])
   @@map("users")
 }
 
@@ -187,6 +188,7 @@ model LeadTeamMember {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([leadId, userId])
+  @@index([userId])
   @@map("lead_team_members")
 }
 
@@ -205,6 +207,7 @@ model Meeting {
   user User? @relation(fields: [userId], references: [id])
 
   @@index([leadId])
+  @@index([userId])
   @@map("meetings")
 }
 
@@ -220,6 +223,7 @@ model Comment {
   user User? @relation(fields: [userId], references: [id])
 
   @@index([leadId])
+  @@index([userId])
   @@map("comments")
 }
 
@@ -269,6 +273,7 @@ model LeadActivity {
 
   @@index([leadId])
   @@index([activityDate])
+  @@index([userId])
   @@map("lead_activities")
 }
 
@@ -331,5 +336,6 @@ model WhatsAppMessage {
 
   @@index([leadId])
   @@index([wamid])
+  @@index([sentBy])
   @@map("whatsapp_messages")
 }

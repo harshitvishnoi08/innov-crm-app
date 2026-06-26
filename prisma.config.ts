@@ -9,6 +9,7 @@ export default defineConfig({
     seed: "npx tsx prisma/seed.js",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    // Migrations need a direct session connection, not the transaction pooler.
+    url: env("DIRECT_URL"),
   },
 });
