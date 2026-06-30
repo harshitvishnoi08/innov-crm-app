@@ -217,6 +217,8 @@ model Comment {
   userId    String?  @db.Uuid
   content   String
   type      String   @default("note")
+  imageUrl  String?  @db.Text
+  imageName String?
   createdAt DateTime @default(now()) @db.Timestamptz
 
   lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)

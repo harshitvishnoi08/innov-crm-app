@@ -77,6 +77,24 @@ export async function addComment(leadId: string, content: string, type = 'note')
   return json?.data ?? json;
 }
 
+export async function uploadCommentImage(leadId: string, file: File, caption = '') {
+  const formData = new FormData();
+  formData.append('leadId', leadId);
+  formData.append('file', file);
+  if (caption) formData.append('caption', caption);
+
+  const response = await fetch('/api/comments/upload', {
+    method: 'POST',
+    body: formData,
+  });
+  if (!response.ok) {
+    const json = await response.json().catch(() => null);
+    throw new Error(json?.error || 'Failed to upload image');
+  }
+  const json = await response.json();
+  return json?.data ?? json;
+}
+
 export async function scheduleMeeting(data: {
   leadId: string;
   agenda: string;

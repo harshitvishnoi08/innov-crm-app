@@ -6,6 +6,7 @@ import {
   createLead,
   updateLead,
   addComment,
+  uploadCommentImage,
   scheduleMeeting,
   updateMeeting,
   deleteMeeting,
@@ -125,6 +126,17 @@ export function useAddComment(leadId: string) {
   return useMutation({
     mutationFn: ({ content, type }: { content: string; type?: string }) =>
       addComment(leadId, content, type),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: leadQueryKeys.detail(leadId) });
+    },
+  });
+}
+
+export function useUploadCommentImage(leadId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ file, caption }: { file: File; caption?: string }) =>
+      uploadCommentImage(leadId, file, caption),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: leadQueryKeys.detail(leadId) });
     },

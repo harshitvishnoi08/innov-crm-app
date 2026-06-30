@@ -14,11 +14,15 @@ const ACTIVITY_LABELS: Record<string, { label: string; className: string }> = {
   bulk_update: { label: 'Bulk update', className: 'bg-amber-500/15 text-amber-500' },
 };
 
+// Types posted by a user that should render as a left-aligned chat bubble
+// (not a full-width system event row).
+const USER_MESSAGE_TYPES = new Set(['note', 'image']);
+
 export function getActivityLabel(type: string | undefined) {
-  if (!type || type === 'note') return null;
+  if (!type || USER_MESSAGE_TYPES.has(type)) return null;
   return ACTIVITY_LABELS[type] ?? { label: type.replace(/_/g, ' '), className: 'bg-muted text-muted-foreground' };
 }
 
 export function isSystemActivity(type: string | undefined) {
-  return Boolean(type && type !== 'note');
+  return Boolean(type && !USER_MESSAGE_TYPES.has(type));
 }

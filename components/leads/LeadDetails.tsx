@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLeadQuery, useUpdateLead, useAddComment, useScheduleMeeting, useUpdateMeeting, useDeleteMeeting } from '@/queries/leads';
+import { useLeadQuery, useUpdateLead, useAddComment, useUploadCommentImage, useScheduleMeeting, useUpdateMeeting, useDeleteMeeting } from '@/queries/leads';
 import { useUsersQuery } from '@/queries/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Send, Calendar, X, UserPlus, Trash2, Phone, Pencil, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Send, Calendar, X, UserPlus, Trash2, Phone, Pencil, MessageCircle, ImagePlus, Loader2 } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 import { WhatsAppLinkMenu } from '@/components/leads/WhatsAppLinkMenu';
 import { LeadStatusCell } from '@/components/leads/LeadStatusCell';
@@ -61,10 +61,12 @@ export function LeadDetail({ id }: { id: string }) {
   const { data: lead, isLoading, refetch } = useLeadQuery(id);
   const updateLead = useUpdateLead(id);
   const addComment = useAddComment(id);
+  const uploadImage = useUploadCommentImage(id);
   const scheduleMeeting = useScheduleMeeting(id);
   const updateMeetingMut = useUpdateMeeting(id);
   const deleteMeetingMut = useDeleteMeeting(id);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [rightTab, setRightTab] = useState<'activity' | 'whatsapp'>('activity');
   const [comment, setComment] = useState('');
   const [confirmCall, setConfirmCall] = useState(false);
@@ -152,6 +154,31 @@ export function LeadDetail({ id }: { id: string }) {
     await addComment.mutateAsync({ content: comment.trim(), type: 'note' });
     setComment('');
     void refetch();
+  };
+
+  const handlePickImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image must be 10MB or smaller');
+      return;
+    }
+    try {
+      await uploadImage.mutateAsync({ file, caption: comment.trim() });
+      setComment('');
+      void refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to upload image');
+    }
   };
 
   const handleScheduleMeeting = async () => {
@@ -548,6 +575,8 @@ export function LeadDetail({ id }: { id: string }) {
                     const commentType = c.type as string | undefined;
                     const activityLabel = getActivityLabel(commentType);
                     const systemEvent = isSystemActivity(commentType);
+                    const imageUrl = c.imageUrl as string | undefined;
+                    const content = c.content as string;
                     return (
                       <div
                         key={c.id as string}
@@ -567,9 +596,22 @@ export function LeadDetail({ id }: { id: string }) {
                               : 'rounded-tl-sm bg-muted/60 max-w-[85%]'
                           }`}
                         >
-                          <p className={`text-sm leading-relaxed ${systemEvent ? 'text-muted-foreground' : ''}`}>
-                            {c.content as string}
-                          </p>
+                          {imageUrl && (
+                            <a href={imageUrl} target="_blank" rel="noopener noreferrer">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={imageUrl}
+                                alt={(c.imageName as string) || 'attachment'}
+                                className="max-w-[220px] max-h-[260px] rounded-lg object-cover mb-1"
+                                loading="lazy"
+                              />
+                            </a>
+                          )}
+                          {content && (
+                            <p className={`text-sm leading-relaxed ${systemEvent ? 'text-muted-foreground' : ''}`}>
+                              {content}
+                            </p>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground px-1">
                           {user?.name || 'System'} · {formatDateTime(c.createdAt as string)}
@@ -579,8 +621,28 @@ export function LeadDetail({ id }: { id: string }) {
                   })}
                 </CardContent>
                 <div className="p-3 border-t flex gap-2 flex-shrink-0">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => void handleImageSelected(e)}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handlePickImage}
+                    disabled={uploadImage.isPending}
+                    title="Attach a photo"
+                  >
+                    {uploadImage.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImagePlus className="h-4 w-4" />
+                    )}
+                  </Button>
                   <Input
-                    placeholder="Add a comment..."
+                    placeholder={uploadImage.isPending ? 'Uploading photo…' : 'Add a comment or caption…'}
                     value={comment}
                     onChange={e => setComment(e.target.value)}
                     onKeyDown={e => {
