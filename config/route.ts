@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, Users, Settings, UserCheck, Calendar, MessageCircle, MessageSquareText } from "lucide-react";
+import { LayoutDashboard, Users, Settings, UserCheck, Calendar, MessageCircle, MessageSquareText, BarChart3 } from "lucide-react";
 
 export type NavSubItem = {
   title: string;
@@ -36,6 +36,11 @@ export function getCurrentAppConfig(user: unknown) {
     },
     // Admin-only items
     ...(isAdmin ? [
+      {
+        title: "Analytics",
+        url: "/analytics",
+        icon: BarChart3,
+      },
       {
         title: "Users",
         url: "/users",

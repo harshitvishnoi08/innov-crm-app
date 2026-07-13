@@ -137,6 +137,12 @@ model Lead {
   platform          String
   leadSource        String?          @default("Meta Ads")
   leadgenId         String?          @map("leadgen_id")
+  campaignId        String?          @map("campaign_id")
+  campaignName      String?          @map("campaign_name")
+  adsetId           String?          @map("adset_id")
+  adsetName         String?          @map("adset_name")
+  adId              String?          @map("ad_id")
+  adName            String?          @map("ad_name")
   status            LeadStatus       @default(NEW)
   temperature       LeadTemperature?
   activeStatus      ActiveStatus     @default(ACTIVE)
@@ -175,6 +181,8 @@ model Lead {
   @@index([assignedTo, createdAt])
   @@index([temperature])
   @@index([activeStatus])
+  @@index([adId])
+  @@index([campaignId])
   @@map("leads")
 }
 

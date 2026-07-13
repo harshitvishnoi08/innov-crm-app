@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
             // Fetch lead field data and form name in parallel
             const [leadResponse, formResponse] = await Promise.all([
               fetch(
-                "https://graph.facebook.com/v19.0/" + leadgenId + "?fields=field_data,platform,created_time&access_token=" + accessToken
+                "https://graph.facebook.com/v19.0/" + leadgenId + "?fields=field_data,platform,created_time,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name&access_token=" + accessToken
               ),
               fetch(
                 "https://graph.facebook.com/v19.0/" + formId + "?fields=name,questions&access_token=" + accessToken
@@ -106,6 +106,12 @@ export async function POST(req: NextRequest) {
                   briefScope: fields["how_would_you_like_to_proceed_with_consultation?"] || "",
                   leadSource: formData.name || "Meta Ads",
                   platform,
+                  campaignId: leadData.campaign_id ?? null,
+                  campaignName: leadData.campaign_name ?? null,
+                  adsetId: leadData.adset_id ?? null,
+                  adsetName: leadData.adset_name ?? null,
+                  adId: leadData.ad_id ?? null,
+                  adName: leadData.ad_name ?? null,
                   status: "NEW",
                   leadCreatedDate: leadData.created_time
                     ? new Date(leadData.created_time)

@@ -17,6 +17,9 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-chart-8: var(--chart-8);
+  --color-chart-7: var(--chart-7);
+  --color-chart-6: var(--chart-6);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -67,11 +70,15 @@
   --border: oklch(0.83 0.008 91);
   --input: oklch(0.88 0.006 91);
   --ring: oklch(0.7665 0.1387 91.0594);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.5 0.12 227.392);
-  --chart-4: oklch(0.7 0.16 84.429);
-  --chart-5: oklch(0.65 0.16 70.08);
+  /* Validated categorical palette (dataviz skill), blue-first order. */
+  --chart-1: #2a78d6; /* blue */
+  --chart-2: #1baf7a; /* aqua */
+  --chart-3: #eda100; /* yellow */
+  --chart-4: #008300; /* green */
+  --chart-5: #4a3aa7; /* violet */
+  --chart-6: #e34948; /* red */
+  --chart-7: #e87ba4; /* magenta */
+  --chart-8: #eb6834; /* orange */
   --sidebar: oklch(0.96 0.005 91);
   --sidebar-foreground: oklch(0.22 0.005 91);
   --sidebar-primary: oklch(0.7665 0.1387 91.0594);
@@ -101,11 +108,15 @@
   --border: oklch(0.2931 0 0);
   --input: oklch(0.2178 0 0);
   --ring: oklch(0.7665 0.1387 91.0594);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  /* Validated categorical palette (dataviz skill), dark-surface steps. */
+  --chart-1: #3987e5; /* blue */
+  --chart-2: #199e70; /* aqua */
+  --chart-3: #c98500; /* yellow */
+  --chart-4: #008300; /* green */
+  --chart-5: #9085e9; /* violet */
+  --chart-6: #e66767; /* red */
+  --chart-7: #d55181; /* magenta */
+  --chart-8: #d95926; /* orange */
   --sidebar: oklch(0.1791 0 0);
   --sidebar-foreground: oklch(0.9672 0 0);
   --sidebar-primary: oklch(0.7665 0.1387 91.0594);
