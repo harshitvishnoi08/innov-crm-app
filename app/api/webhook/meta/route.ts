@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { sendNewLeadNotification } from "@/lib/mailer";
 import { sendWhatsAppTemplate, normalizePhone } from "@/lib/whatsapp";
 import { ActivityType, logLeadActivity } from "@/lib/lead-activity-log";
+import { normalizeIndianPhone } from "@/lib/phone";
 
 const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN;
 
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
               const newLead = await prisma.lead.create({
                 data: {
                   customerName: fields["full_name"] || fields["name"] || "Unknown",
-                  contactNumber: fields["phone_number"] || fields["phone"] || "",
+                  contactNumber: normalizeIndianPhone(fields["phone_number"] || fields["phone"] || ""),
                   city: fields["city"] || fields["street_address"] || "",
                   propertyType: fields["your_property_type_"] || fields["property_type"] || "",
                   leadgenId: String(leadgenId),

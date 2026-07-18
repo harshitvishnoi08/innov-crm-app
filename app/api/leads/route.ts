@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
 import { sendNewLeadNotification } from "@/lib/mailer";
 import { ActivityType, logLeadActivity } from "@/lib/lead-activity-log";
+import { normalizeIndianPhone } from "@/lib/phone";
 
 // GET leads with full server-side filtering + pagination
 export async function GET(req: NextRequest) {
@@ -106,8 +107,8 @@ export async function POST(req: NextRequest) {
     const lead = await prisma.lead.create({
       data: {
         customerName:     body.customerName,
-        contactNumber:    body.contactNumber,
-        alternateContact: body.alternateContact,
+        contactNumber:    normalizeIndianPhone(body.contactNumber),
+        alternateContact: normalizeIndianPhone(body.alternateContact),
         email:            body.email,
         state:            body.state,
         city:             body.city,

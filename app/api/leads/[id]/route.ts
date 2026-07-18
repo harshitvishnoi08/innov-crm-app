@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
 import { logLeadFieldChanges } from "@/lib/lead-activity-log";
 import { sendLeadCrmEvent } from "@/lib/meta-capi";
+import { normalizeIndianPhone } from "@/lib/phone";
 
 const TRACKED_FIELDS = [
   "customerName",
@@ -85,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const updateData: Record<string, unknown> = {
       ...(body.customerName && { customerName: body.customerName }),
-      ...(body.contactNumber && { contactNumber: body.contactNumber }),
+      ...(body.contactNumber && { contactNumber: normalizeIndianPhone(body.contactNumber) }),
       ...(body.email !== undefined && { email: body.email }),
       ...(body.city !== undefined && { city: body.city }),
       ...(body.state !== undefined && { state: body.state }),

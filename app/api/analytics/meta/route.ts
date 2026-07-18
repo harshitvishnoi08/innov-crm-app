@@ -3,6 +3,11 @@ import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
 import { fetchMetaAdSpend } from "@/lib/meta-ads-insights";
 
+// Always compute fresh — leads and spend change constantly, and this route
+// must never be served from Next's Data/Route Cache (dev or Vercel prod).
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const ISTOffsetMs = 5.5 * 60 * 60 * 1000;
 const UNKNOWN_AD = "Unknown ad";
 const UNKNOWN_CAMPAIGN = "Unknown campaign";
@@ -131,17 +136,30 @@ export async function GET(req: NextRequest) {
       spendByCampaign.set(campaignKey, (spendByCampaign.get(campaignKey) ?? 0) + row.spend);
       const adsetKey = row.adsetId ?? UNKNOWN_ADSET;
       spendByAdset.set(adsetKey, (spendByAdset.get(adsetKey) ?? 0) + row.spend);
-      // Make sure ads/campaigns/adsets that only exist in the spend data (no
-      // leads yet) still appear in the rollups, with a 0 lead count.
-      if (!adMap.has(row.adId)) {
-        adMap.set(row.adId, { key: row.adId, label: row.adName, campaignName: row.campaignName ?? undefined, count: 0 });
-      }
-      if (!campaignMap.has(campaignKey)) {
-        campaignMap.set(campaignKey, { key: campaignKey, label: row.campaignName ?? UNKNOWN_CAMPAIGN, count: 0 });
-      }
-      if (!adsetMap.has(adsetKey)) {
-        adsetMap.set(adsetKey, { key: adsetKey, label: row.adsetName ?? UNKNOWN_ADSET, campaignName: row.campaignName ?? undefined, count: 0 });
-      }
+      // The Insights API always reflects the current name in Ads Manager; the
+      // name on a lead record is a permanent snapshot from when the lead came
+      // in, so it goes stale the moment someone renames the ad/adset/campaign.
+      // Prefer the live name here — overwrite, don't just fill in gaps.
+      const existingAd = adMap.get(row.adId);
+      adMap.set(row.adId, {
+        key: row.adId,
+        label: row.adName,
+        campaignName: row.campaignName ?? existingAd?.campaignName,
+        count: existingAd?.count ?? 0,
+      });
+      const existingCampaign = campaignMap.get(campaignKey);
+      campaignMap.set(campaignKey, {
+        key: campaignKey,
+        label: row.campaignName ?? UNKNOWN_CAMPAIGN,
+        count: existingCampaign?.count ?? 0,
+      });
+      const existingAdset = adsetMap.get(adsetKey);
+      adsetMap.set(adsetKey, {
+        key: adsetKey,
+        label: row.adsetName ?? UNKNOWN_ADSET,
+        campaignName: row.campaignName ?? existingAdset?.campaignName,
+        count: existingAdset?.count ?? 0,
+      });
     }
 
     const withSpend = <T extends { key: string; count: number }>(bucket: T, spendMap: Map<string, number>) => {

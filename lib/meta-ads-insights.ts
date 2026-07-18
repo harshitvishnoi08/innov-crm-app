@@ -27,7 +27,7 @@ export type AdsInsightsResult = {
 async function fetchAllPages(url: string): Promise<{ rows: Record<string, string>[]; error?: unknown }> {
   const rows: Record<string, string>[] = [];
   for (let page = 0; page < 20 && url; page++) {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     const data = await res.json();
     if (data.error) return { rows, error: data.error };
     rows.push(...(data.data ?? []));
@@ -60,7 +60,9 @@ export async function fetchMetaAdSpend(range: { since: string; until: string } |
 
   try {
     const [currencyRes, adPages, dailyPages] = await Promise.all([
-      fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${accountId}?fields=currency&access_token=${accessToken}`),
+      fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${accountId}?fields=currency&access_token=${accessToken}`, {
+        cache: "no-store",
+      }),
       fetchAllPages(
         `https://graph.facebook.com/${GRAPH_VERSION}/${accountId}/insights` +
           `?level=ad&fields=ad_id,ad_name,campaign_id,campaign_name,adset_id,adset_name,spend` +

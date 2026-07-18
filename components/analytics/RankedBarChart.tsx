@@ -9,6 +9,7 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import type { AnalyticsBucket } from '@/services/analytics.service';
+import { ChartIndexLegend } from '@/components/analytics/ChartIndexLegend';
 
 const MAX_ROWS = 8;
 // Fixed hue order — a bar's color follows its rank/entity, never regenerated
@@ -26,25 +27,16 @@ const SLOT_COLORS = [
 ];
 const OTHER_COLOR = 'var(--muted-foreground)';
 
-function truncateLabel(label: string, max = 16) {
-  return label.length > max ? `${label.slice(0, max - 1)}…` : label;
-}
-
-// Angled + right-anchored so labels read diagonally under their bar instead
-// of colliding with their neighbors when names are long and bars are narrow.
+// Numbered instead of the full name — long, similarly-prefixed names (e.g.
+// several "Hill Resort ..." ad sets) collide or truncate to indistinguishable
+// text at this width. The number maps to a legend below the chart instead.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function Tick(props: any) {
-  const { x, y, payload } = props as { x: number; y: number; payload: { value: string } };
+  const { x, y, index } = props as { x: number; y: number; index: number };
   return (
     <g transform={`translate(${x},${y})`}>
-      <title>{payload.value}</title>
-      <text
-        dy={8}
-        textAnchor="end"
-        transform="rotate(-35)"
-        className="fill-muted-foreground text-[11px]"
-      >
-        {truncateLabel(payload.value)}
+      <text dy={12} textAnchor="middle" className="fill-muted-foreground text-[11px] tabular-nums">
+        {index + 1}
       </text>
     </g>
   );
@@ -114,12 +106,13 @@ export function RankedBarChart({
       <CardHeader>
         <CardTitle className="text-sm font-semibold">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
         {chartData.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{emptyLabel}</p>
         ) : (
-          <ChartContainer config={config} className="w-full aspect-auto h-[340px]">
-            <RechartsPrimitive.BarChart data={chartData} margin={{ top: 20, right: 8, bottom: 56, left: 8 }} barCategoryGap="20%">
+          <>
+          <ChartContainer config={config} className="w-full aspect-auto h-[300px]">
+            <RechartsPrimitive.BarChart data={chartData} margin={{ top: 20, right: 8, bottom: 8, left: 8 }} barCategoryGap="20%">
               <RechartsPrimitive.CartesianGrid vertical={false} strokeDasharray="0" stroke="var(--border)" opacity={0.5} />
               <RechartsPrimitive.XAxis
                 dataKey="name"
@@ -153,6 +146,10 @@ export function RankedBarChart({
               </RechartsPrimitive.Bar>
             </RechartsPrimitive.BarChart>
           </ChartContainer>
+          <ChartIndexLegend
+            items={chartData.map((entry, i) => ({ index: i + 1, label: entry.name, color: entry.fill }))}
+          />
+          </>
         )}
       </CardContent>
     </Card>

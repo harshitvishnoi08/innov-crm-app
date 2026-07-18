@@ -7,40 +7,34 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import type { AnalyticsSpendBucket } from '@/services/analytics.service';
 import { formatMoney } from '@/lib/format-money';
 import { SeriesToggleTile } from '@/components/analytics/SeriesToggleTile';
+import { ChartIndexLegend } from '@/components/analytics/ChartIndexLegend';
 
 const MAX_ROWS = 10;
 const LEADS_COLOR = 'var(--chart-1)'; // blue
 const SPEND_COLOR = 'var(--chart-6)'; // red — opposite pole of blue, reads as a distinct second series
 
-function truncateLabel(label: string, max = 16) {
-  return label.length > max ? `${label.slice(0, max - 1)}…` : label;
-}
-
-// Angled + right-anchored so labels read diagonally under their point instead
-// of colliding with their neighbors when names are long and slots are narrow.
+// Numbered instead of the full name — long, similarly-prefixed names (e.g.
+// several "Hill Resort ..." ad sets) collide or truncate to indistinguishable
+// text at this width. The number maps to a legend below the chart instead.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function Tick(props: any) {
-  const { x, y, payload } = props as { x: number; y: number; payload: { value: string } };
+  const { x, y, index } = props as { x: number; y: number; index: number };
   return (
     <g transform={`translate(${x},${y})`}>
-      <title>{payload.value}</title>
-      <text
-        dy={8}
-        textAnchor="end"
-        transform="rotate(-35)"
-        className="fill-muted-foreground text-[11px]"
-      >
-        {truncateLabel(payload.value)}
+      <text dy={12} textAnchor="middle" className="fill-muted-foreground text-[11px] tabular-nums">
+        {index + 1}
       </text>
     </g>
   );
 }
 
 export function AdSpendLeadsChart({
+  title = 'Spend vs. leads by ad',
   buckets,
   currency,
   spendConfigured,
 }: {
+  title?: string;
   buckets: AnalyticsSpendBucket[];
   currency: string | null;
   spendConfigured: boolean;
@@ -61,7 +55,7 @@ export function AdSpendLeadsChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-semibold">Spend vs. leads by ad</CardTitle>
+        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2">
@@ -84,8 +78,9 @@ export function AdSpendLeadsChart({
         {chartData.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">No leads in this range yet.</p>
         ) : (
-          <ChartContainer config={config} className="w-full aspect-auto h-[340px]">
-            <RechartsPrimitive.LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 56, left: 0 }}>
+          <>
+          <ChartContainer config={config} className="w-full aspect-auto h-[300px]">
+            <RechartsPrimitive.LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
               <RechartsPrimitive.CartesianGrid vertical={false} strokeDasharray="0" stroke="var(--border)" opacity={0.5} />
               <RechartsPrimitive.XAxis dataKey="name" tickLine={false} axisLine={false} interval={0} tick={Tick} />
               <RechartsPrimitive.YAxis
@@ -111,7 +106,6 @@ export function AdSpendLeadsChart({
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    labelKey="name"
                     formatter={(value, name) => (
                       <div className="flex w-full justify-between gap-4">
                         <span className="text-muted-foreground">{name === 'spend' ? 'Spend' : 'Leads'}</span>
@@ -151,6 +145,8 @@ export function AdSpendLeadsChart({
               )}
             </RechartsPrimitive.LineChart>
           </ChartContainer>
+          <ChartIndexLegend items={chartData.map((entry, i) => ({ index: i + 1, label: entry.name }))} />
+          </>
         )}
       </CardContent>
     </Card>

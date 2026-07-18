@@ -79,6 +79,21 @@ export function AnalyticsOverview() {
         </div>
       )}
 
+      {/* Hierarchy note: Meta's structure is Campaign → Ad set → Ad. A campaign
+          holds one or more ad sets (each its own audience/budget/placement), and
+          each ad set holds one or more ads (the actual creative/copy shown).
+          "Unknown" buckets are leads whose Meta payload didn't carry that field
+          (pre-tracking leads or manual entries), not a data error. */}
+      <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground leading-relaxed">
+        <span className="font-medium text-foreground">Reading these charts: </span>
+        Meta structures ads as <span className="font-medium text-foreground">Campaign → Ad set → Ad</span>.
+        A <span className="font-medium text-foreground">campaign</span> is the overall goal/budget; an{' '}
+        <span className="font-medium text-foreground">ad set</span> controls audience, placement, and budget split;
+        an <span className="font-medium text-foreground">ad</span> is the specific creative/copy shown. Two rows
+        with the same name are genuinely different entities in Meta (same name, different ID) — hover a bar to see
+        its full name. &quot;Unknown&quot; rows are leads without ad data attached (older leads, or manual entries).
+      </div>
+
       {/* Stats */}
       <AnalyticsStats data={data} />
 
@@ -94,6 +109,16 @@ export function AnalyticsOverview() {
 
       {/* Ad spend & cost per lead */}
       <AdSpendTable buckets={data.byAd} currency={data.spend.currency} configured={data.spend.configured} />
+
+      {/* Ad set: spend vs. leads combined — mirrors the per-ad chart above but
+          one level up the hierarchy, for deciding where to shift budget rather
+          than which creative to keep. */}
+      <AdSpendLeadsChart
+        title="Spend vs. leads by ad set"
+        buckets={data.byAdset}
+        currency={data.spend.currency}
+        spendConfigured={data.spend.configured}
+      />
 
       {/* Ad set: spend vs. leads, same order + colors in both charts so a
           short bar under a tall one is easy to spot at a glance. */}

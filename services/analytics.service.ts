@@ -33,6 +33,7 @@ export type MetaAnalyticsData = {
 export async function fetchMetaAnalytics(dateRange: string): Promise<MetaAnalyticsData> {
   const response = await fetch(`/api/analytics/meta?dateRange=${encodeURIComponent(dateRange)}`, {
     method: 'GET',
+    cache: 'no-store',
   });
   if (!response.ok) {
     throw new Error('Failed to fetch analytics data');
