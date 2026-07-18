@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
-import { fetchMetaAdSpend } from "@/lib/meta-ads-insights";
+import { fetchMetaAdSpend, fetchLiveAdStatus } from "@/lib/meta-ads-insights";
 
 // Always compute fresh — leads and spend change constantly, and this route
 // must never be served from Next's Data/Route Cache (dev or Vercel prod).
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
         }
       : null;
 
-    const [leads, adSpend] = await Promise.all([
+    const [leads, adSpend, liveAdStatus, leadsToday] = await Promise.all([
       prisma.lead.findMany({
         where: {
           ...(fromUTC && { leadCreatedDate: { gte: fromUTC, ...(toUTC && { lt: toUTC }) } }),
@@ -93,6 +93,13 @@ export async function GET(req: NextRequest) {
         },
       }),
       fetchMetaAdSpend(spendRange),
+      fetchLiveAdStatus(),
+      // "Currently running" always means today, independent of the selected
+      // dateRange — a user browsing "Last 90 days" still wants today's live count.
+      prisma.lead.findMany({
+        where: { leadCreatedDate: { gte: todayStartUTC } },
+        select: { adId: true },
+      }),
     ]);
 
     type Bucket = { key: string; label: string; campaignName?: string; count: number };
@@ -181,6 +188,19 @@ export async function GET(req: NextRequest) {
     const leadsWithAdData = leads.filter((l: (typeof leads)[number]) => l.adId).length;
     const totalSpend = adSpend.byAd.reduce((sum, row) => sum + row.spend, 0);
 
+    const leadsTodayByAd = new Map<string, number>();
+    for (const lead of leadsToday) {
+      if (!lead.adId) continue;
+      leadsTodayByAd.set(lead.adId, (leadsTodayByAd.get(lead.adId) ?? 0) + 1);
+    }
+    const liveAds = liveAdStatus.ads
+      .map((ad) => ({ ...ad, leadsToday: leadsTodayByAd.get(ad.adId) ?? 0 }))
+      // Active-but-not-spending ads (just turned on, budget exhausted, delivery
+      // paused by Meta) aren't what "currently spending" means here — only
+      // show ads with real spend today.
+      .filter((ad) => ad.spendToday > 0)
+      .sort((a, b) => b.spendToday - a.spendToday || b.leadsToday - a.leadsToday);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -195,6 +215,11 @@ export async function GET(req: NextRequest) {
         byCampaign,
         byAdset,
         trend,
+        live: {
+          configured: liveAdStatus.configured,
+          currency: liveAdStatus.currency,
+          ads: liveAds,
+        },
       },
     });
   } catch (error) {

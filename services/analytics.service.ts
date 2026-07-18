@@ -16,6 +16,21 @@ export type AnalyticsTrendPoint = {
   spend: number;
 };
 
+export type LiveAd = {
+  adId: string;
+  adName: string;
+  effectiveStatus: string;
+  campaignId: string | null;
+  campaignName: string | null;
+  adsetId: string | null;
+  adsetName: string | null;
+  spendToday: number;
+  impressionsToday: number;
+  clicksToday: number;
+  ctrToday: number | null;
+  leadsToday: number;
+};
+
 export type MetaAnalyticsData = {
   totals: { totalLeads: number; leadsWithAdData: number };
   spend: {
@@ -28,6 +43,11 @@ export type MetaAnalyticsData = {
   byCampaign: AnalyticsSpendBucket[];
   byAdset: AnalyticsSpendBucket[];
   trend: AnalyticsTrendPoint[];
+  live: {
+    configured: boolean;
+    currency: string | null;
+    ads: LiveAd[];
+  };
 };
 
 export async function fetchMetaAnalytics(dateRange: string): Promise<MetaAnalyticsData> {

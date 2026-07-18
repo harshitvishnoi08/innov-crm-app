@@ -10,6 +10,7 @@ import { LeadsTrendChart } from '@/components/analytics/LeadsTrendChart';
 import { AdsetBreakdownTable } from '@/components/analytics/AdsetBreakdownTable';
 import { AdSpendTable } from '@/components/analytics/AdSpendTable';
 import { AdSpendLeadsChart } from '@/components/analytics/AdSpendLeadsChart';
+import { LiveAdsTable } from '@/components/analytics/LiveAdsTable';
 import { AnalyticsDateFilter } from '@/components/analytics/AnalyticsDateFilter';
 import { formatMoney } from '@/lib/format-money';
 
@@ -96,6 +97,10 @@ export function AnalyticsOverview() {
 
       {/* Stats */}
       <AnalyticsStats data={data} />
+
+      {/* Currently running: live status from Ads Manager + today's numbers,
+          independent of the date-range picker above. */}
+      <LiveAdsTable ads={data.live.ads} currency={data.live.currency} configured={data.live.configured} />
 
       {/* Trend */}
       <LeadsTrendChart trend={data.trend} currency={data.spend.currency} spendConfigured={data.spend.configured} />
