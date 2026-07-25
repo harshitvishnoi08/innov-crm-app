@@ -41,5 +41,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin', '/admin/:path*', '/login', '/forgot-password'],
+  // Includes /api/:path* so client-side fetches also get a refreshed session
+  // cookie — without this, the token can expire between page loads (this proxy
+  // never runs on client-side SPA navigation) and API calls fail with a stale
+  // 401 that the UI was misreporting as "Lead not found".
+  matcher: ['/admin', '/admin/:path*', '/login', '/forgot-password', '/api/:path*'],
 };

@@ -20,6 +20,7 @@ import { LeadStatusCell } from '@/components/leads/LeadStatusCell';
 import { toast } from 'sonner';
 import { WhatsAppChat } from '@/components/leads/WhatsAppChat';
 import { getActivityLabel, isSystemActivity } from '@/components/leads/activity-labels';
+import { FetchLeadError } from '@/services/leads.service';
 
 function formatDate(value: string | null | undefined) {
   if (!value) return '—';
@@ -58,7 +59,7 @@ export function LeadDetail({ id }: { id: string }) {
       router.push('/admin/leads');
     }
   };
-  const { data: lead, isLoading, refetch } = useLeadQuery(id);
+  const { data: lead, isLoading, error, refetch } = useLeadQuery(id);
   const updateLead = useUpdateLead(id);
   const addComment = useAddComment(id);
   const uploadImage = useUploadCommentImage(id);
@@ -110,12 +111,36 @@ export function LeadDetail({ id }: { id: string }) {
   }
 
   if (!lead) {
+    const status = error instanceof FetchLeadError ? error.status : null;
+    const isAuthIssue = status === 401;
+    const isForbidden = status === 403;
+    const message = isAuthIssue
+      ? 'Your session expired — refresh the page and try again.'
+      : isForbidden
+      ? "You don't have permission to view this lead."
+      : status && status !== 404
+      ? 'Something went wrong loading this lead — please try again.'
+      : 'Lead not found.';
+
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20">
-        <p className="text-muted-foreground">Lead not found.</p>
-        <Button variant="outline" onClick={goBackToLeads}>
-          Back to Leads
-        </Button>
+        <p className="text-muted-foreground">{message}</p>
+        <div className="flex gap-2">
+          {isAuthIssue ? (
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Refresh
+            </Button>
+          ) : (
+            !isForbidden && status !== 404 && (
+              <Button variant="outline" onClick={() => refetch()}>
+                Retry
+              </Button>
+            )
+          )}
+          <Button variant="outline" onClick={goBackToLeads}>
+            Back to Leads
+          </Button>
+        </div>
       </div>
     );
   }

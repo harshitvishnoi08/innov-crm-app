@@ -37,9 +37,17 @@ export async function fetchLeadsMeta() {
   return response.json(); // returns { platforms, sources }
 }
 
+export class FetchLeadError extends Error {
+  status: number;
+  constructor(status: number) {
+    super('Failed to fetch lead');
+    this.status = status;
+  }
+}
+
 export async function fetchLead(id: string) {
   const response = await fetch(`/api/leads/${id}`, { method: 'GET' });
-  if (!response.ok) throw new Error('Failed to fetch lead');
+  if (!response.ok) throw new FetchLeadError(response.status);
   const json = await response.json();
   return json?.data ?? json;
 }
