@@ -147,7 +147,7 @@ type LeadRowProps = {
   isSelected: boolean;
   isAdmin: boolean;
   users: { id: string; name: string }[];
-  onOpen: (id: string) => void;
+  onOpen: (id: string, e?: React.MouseEvent) => void;
   onPrefetch: (id: string) => void;
   onToggleSelect: (id: string) => void;
   onInlinePatch: (id: string, data: Record<string, unknown>) => void;
@@ -169,7 +169,8 @@ const MobileLeadCard = React.memo(function MobileLeadCard({
     <Card
       className={`overflow-hidden gap-0 py-0 cursor-pointer transition-all duration-150 hover:bg-muted/30 active:bg-muted/50 ${isSelected ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/20' : ''}`}
       onMouseEnter={() => onPrefetch(id)}
-      onClick={() => onOpen(id)}
+      onClick={e => onOpen(id, e)}
+      onAuxClick={e => { if (e.button === 1) onOpen(id, e); }}
     >
       <CardContent className="p-4">
         {/* Row 1: checkbox + name + temp + delete */}
@@ -303,7 +304,8 @@ const DesktopLeadRow = React.memo(function DesktopLeadRow({
     <TableRow
       className={`cursor-pointer transition-colors duration-150 hover:bg-muted/50 ${isSelected ? 'bg-primary/10 hover:bg-primary/15' : ''}`}
       onMouseEnter={() => onPrefetch(id)}
-      onClick={() => onOpen(id)}
+      onClick={e => onOpen(id, e)}
+      onAuxClick={e => { if (e.button === 1) onOpen(id, e); }}
     >
       <TableCell onClick={e => e.stopPropagation()}>
         <Checkbox
@@ -741,7 +743,15 @@ export function LeadsTable() {
     prefetchLeadRef.current(id);
     router.prefetch(`/admin/leads/${id}`);
   }, [router]);
-  const onOpen = useCallback((id: string) => router.push(`/admin/leads/${id}`), [router]);
+  const onOpen = useCallback((id: string, e?: React.MouseEvent) => {
+    const url = `/admin/leads/${id}`;
+    // Ctrl/Cmd+click or middle-click should open in a new tab, like a real link.
+    if (e && (e.ctrlKey || e.metaKey || e.button === 1)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    router.push(url);
+  }, [router]);
 
   return (
     <>

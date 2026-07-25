@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,6 +83,15 @@ export function TopLeadsPanel({
 }) {
   const hasLeads = useMemo(() => !!recentLeads?.length, [recentLeads]);
   const router = useRouter();
+  const openLead = (id: string, e?: MouseEvent) => {
+    const url = `/admin/leads/${id}`;
+    // Ctrl/Cmd+click or middle-click should open in a new tab, like a real link.
+    if (e && (e.ctrlKey || e.metaKey || e.button === 1)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    router.push(url);
+  };
 
   return (
     <Card className="border-dashed">
@@ -113,7 +122,8 @@ export function TopLeadsPanel({
                   <div
                     key={lead.id}
                     className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/30 active:bg-muted/50"
-                    onClick={() => router.push(`/admin/leads/${lead.id}`)}
+                    onClick={e => openLead(lead.id, e)}
+                    onAuxClick={e => { if (e.button === 1) openLead(lead.id, e); }}
                   >
                     {/* Temperature dot */}
                     <div
@@ -182,7 +192,8 @@ export function TopLeadsPanel({
                     <TableRow
                       key={lead.id}
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => router.push(`/admin/leads/${lead.id}`)}
+                      onClick={e => openLead(lead.id, e)}
+                      onAuxClick={e => { if (e.button === 1) openLead(lead.id, e); }}
                     >
                       <TableCell className="pl-6 font-medium">
                         {lead.name || 'Unnamed lead'}
