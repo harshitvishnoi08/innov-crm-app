@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
         budgetRange: true,
         followUpDate: true,
         assignedUser: { select: { name: true, email: true } },
+        teamMembers: { select: { user: { select: { email: true } } } },
       },
     });
 
@@ -43,10 +44,13 @@ export async function GET(req: NextRequest) {
     const results: { lead: string; sentTo: string[] }[] = [];
 
     for (const lead of leads) {
-      // Send to assigned user + all admins (deduplicated)
+      // Send to assigned user + all collaborators + all admins (deduplicated)
       const recipients = Array.from(
         new Set([
           ...(lead.assignedUser?.email ? [lead.assignedUser.email] : []),
+          ...lead.teamMembers
+            .map((m: { user: { email: string | null } }) => m.user.email)
+            .filter((e: string | null): e is string => !!e),
           ...adminEmails,
         ])
       ).filter(Boolean);
