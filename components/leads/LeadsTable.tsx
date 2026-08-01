@@ -408,7 +408,9 @@ const DesktopLeadRow = React.memo(function DesktopLeadRow({
       <TableCell>
         <div className="flex items-center gap-2">
           {(lead.leadSource as string) && (
-            <span className="text-sm text-muted-foreground truncate">{lead.leadSource as string}</span>
+            <span className="text-sm text-muted-foreground truncate" title={lead.leadSource as string}>
+              {lead.leadSource as string}
+            </span>
           )}
           {(lead.platform as string) && (
             <Badge variant="outline" className="text-xs shrink-0">
