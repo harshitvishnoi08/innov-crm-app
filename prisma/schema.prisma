@@ -29,6 +29,15 @@ enum LeadTemperature {
   COLD
 }
 
+// Manual lead-quality call, independent of pipeline stage — a lead can be a
+// genuine prospect (QUALIFIED) without ever reaching MEETING_FIXED, and the
+// old status-only signal starved Meta's ad algorithm of that feedback.
+enum LeadQualification {
+  UNREVIEWED
+  QUALIFIED
+  NOT_QUALIFIED
+}
+
 enum ActiveStatus {
   ACTIVE
   INACTIVE
@@ -144,6 +153,7 @@ model Lead {
   adId              String?          @map("ad_id")
   adName            String?          @map("ad_name")
   status            LeadStatus       @default(NEW)
+  qualification     LeadQualification @default(UNREVIEWED)
   temperature       LeadTemperature?
   activeStatus      ActiveStatus     @default(ACTIVE)
   assignedTo        String?          @db.Uuid

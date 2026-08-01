@@ -49,6 +49,7 @@ const FIELD_LABELS: Record<string, string> = {
   platform: 'Platform',
   leadSource: 'Lead source',
   status: 'Status',
+  qualification: 'Qualification',
   temperature: 'Temperature',
   activeStatus: 'Active status',
   assignedTo: 'Assigned to',

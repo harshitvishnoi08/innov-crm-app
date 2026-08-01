@@ -105,7 +105,9 @@ export async function POST(req: NextRequest) {
                   preferredCallTime: fields["preferred_time_to_call_you?_"] || "",
                   initialNotes: fields["when_are_you_planning_to_construct_"] || "",
                   briefScope: fields["how_would_you_like_to_proceed_with_consultation?"] || "",
-                  leadSource: formData.name || "Meta Ads",
+                  // Ad name, not form name — several ads can share one instant form,
+                  // and the ad is what reps actually want to filter/report by.
+                  leadSource: leadData.ad_name || formData.name || "Meta Ads",
                   platform,
                   campaignId: leadData.campaign_id ?? null,
                   campaignName: leadData.campaign_name ?? null,

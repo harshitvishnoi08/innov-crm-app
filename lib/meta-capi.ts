@@ -25,14 +25,14 @@ const LEAD_EVENT_SOURCE = 'Innov CRM';
  * create in Meta Events Manager (Conversion Leads setup). If you rename one
  * here, rename it there too — Meta matches events by name.
  *
- * Positive signal = "this lead was good, find me more like it".
- * Negative signal = "this lead was bad, find me fewer like it".
+ * Only CLOSED_WON is reported off status — it's an unambiguous milestone.
+ * "Qualified" vs "Disqualified" used to be inferred from status (MEETING_FIXED
+ * / JUNK / CLOSED_LOST), but that starved Meta of a signal for any genuine
+ * lead that never reached a scheduled meeting. That's now driven by the
+ * separate, manually-set `qualification` field (see below) instead.
  */
 export const STATUS_EVENT_MAP: Record<string, string> = {
-  MEETING_FIXED: 'Qualified', // genuine, sales-ready lead → positive
   CLOSED_WON: 'Converted', // became a paying customer → strongest positive
-  JUNK: 'Disqualified', // fake / spam / wrong number → negative
-  CLOSED_LOST: 'Disqualified', // real lead but didn't convert → negative
 };
 
 /** Returns the Meta event name for a CRM status, or null if we don't report it. */
@@ -41,11 +41,26 @@ export function eventNameForStatus(status: string | null | undefined): string | 
   return STATUS_EVENT_MAP[status] ?? null;
 }
 
+/**
+ * Maps a manually-set LeadQualification to the Meta funnel event we report.
+ * UNREVIEWED reports nothing — only an explicit call sends a signal.
+ */
+export const QUALIFICATION_EVENT_MAP: Record<string, string> = {
+  QUALIFIED: 'Qualified',
+  NOT_QUALIFIED: 'Disqualified',
+};
+
+/** Returns the Meta event name for a lead qualification call, or null if we don't report it. */
+export function eventNameForQualification(qualification: string | null | undefined): string | null {
+  if (!qualification) return null;
+  return QUALIFICATION_EVENT_MAP[qualification] ?? null;
+}
+
 export interface CrmEventInput {
   /** Meta's leadgen_id captured from the lead webhook (the matching key). */
   leadgenId: string | null | undefined;
-  /** The CRM LeadStatus the lead just moved to. */
-  status: string;
+  /** The Meta funnel event to report — resolve via eventNameForStatus/eventNameForQualification. */
+  eventName: string | null | undefined;
   /** When the change happened, in epoch ms. Defaults to now. */
   at?: number;
 }
@@ -56,12 +71,11 @@ const LEAD_ID_TOKEN = '__LEAD_ID__';
 
 /**
  * Sends one CRM lead event to Meta. Returns true if an event was sent,
- * false if it was skipped (status not reported / not a Meta lead / not
+ * false if it was skipped (no reportable event / not a Meta lead / not
  * configured) or failed. Never throws.
  */
-export async function sendLeadCrmEvent({ leadgenId, status, at }: CrmEventInput): Promise<boolean> {
-  const eventName = eventNameForStatus(status);
-  if (!eventName) return false; // status we don't report to Meta
+export async function sendLeadCrmEvent({ leadgenId, eventName, at }: CrmEventInput): Promise<boolean> {
+  if (!eventName) return false; // nothing to report
   if (!leadgenId || !/^\d+$/.test(leadgenId)) return false; // not a (valid) Meta lead
 
   const datasetId = process.env.META_DATASET_ID;

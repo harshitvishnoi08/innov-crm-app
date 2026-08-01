@@ -425,7 +425,7 @@ export function LeadDetail({ id }: { id: string }) {
             <CardHeader>
               <CardTitle className="text-sm">Status</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Temperature</Label>
                 <Select
@@ -449,6 +449,22 @@ export function LeadDetail({ id }: { id: string }) {
                   onPatch={data => updateLead.mutate(data)}
                   triggerClassName="h-9 min-w-0 flex-1"
                 />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground" title="Reported to Meta as Qualified/Disqualified for Meta-sourced leads, independent of pipeline stage">
+                  Qualification
+                </Label>
+                <Select
+                  value={(lead.qualification as string) || 'UNREVIEWED'}
+                  onValueChange={v => updateLead.mutate({ qualification: v })}
+                >
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UNREVIEWED">Unreviewed</SelectItem>
+                    <SelectItem value="QUALIFIED">✅ Qualified</SelectItem>
+                    <SelectItem value="NOT_QUALIFIED">❌ Not Qualified</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Active Status</Label>

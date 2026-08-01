@@ -165,6 +165,7 @@ const MobileLeadCard = React.memo(function MobileLeadCard({
   const temp = lead.temperature as string;
   const leadStatus = lead.status as string;
   const active = lead.activeStatus as string;
+  const qualification = lead.qualification as string;
   return (
     <Card
       className={`overflow-hidden gap-0 py-0 cursor-pointer transition-all duration-150 hover:bg-muted/30 active:bg-muted/50 ${isSelected ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/20' : ''}`}
@@ -231,6 +232,16 @@ const MobileLeadCard = React.memo(function MobileLeadCard({
             {temp && (
               <span className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${TEMP_COLOR[temp] ?? ''}`}>
                 {TEMP_EMOJI[temp]} {temp.charAt(0) + temp.slice(1).toLowerCase()}
+              </span>
+            )}
+            {qualification === 'QUALIFIED' && (
+              <span className="rounded-md border px-1.5 py-0.5 text-xs font-medium bg-green-500/10 text-green-400 border-green-500/20">
+                ✅ Qualified
+              </span>
+            )}
+            {qualification === 'NOT_QUALIFIED' && (
+              <span className="rounded-md border px-1.5 py-0.5 text-xs font-medium bg-red-500/10 text-red-400 border-red-500/20">
+                ❌ Not Qualified
               </span>
             )}
             {isAdmin && (
@@ -372,6 +383,22 @@ const DesktopLeadRow = React.memo(function DesktopLeadRow({
             <SelectItem value="HOT">🔥 Hot</SelectItem>
             <SelectItem value="WARM">🌡️ Warm</SelectItem>
             <SelectItem value="COLD">❄️ Cold</SelectItem>
+          </SelectContent>
+        </Select>
+      </TableCell>
+
+      <TableCell onClick={e => e.stopPropagation()}>
+        <Select
+          value={(lead.qualification as string) || 'UNREVIEWED'}
+          onValueChange={v => onInlineUpdate(id, 'qualification', v)}
+        >
+          <SelectTrigger className="h-7 w-full border-0 bg-muted/60 pl-2 pr-1 py-0 text-xs focus:ring-0 shadow-none">
+            <SelectValue placeholder="—" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="UNREVIEWED">Unreviewed</SelectItem>
+            <SelectItem value="QUALIFIED">✅ Qualified</SelectItem>
+            <SelectItem value="NOT_QUALIFIED">❌ Not Qualified</SelectItem>
           </SelectContent>
         </Select>
       </TableCell>
@@ -1014,6 +1041,7 @@ export function LeadsTable() {
                       <TableHead className="w-[130px]">Assignee</TableHead>
                       <TableHead className="w-[200px]">Status</TableHead>
                       <TableHead className="w-[90px]">Temp</TableHead>
+                      <TableHead className="w-[120px]">Qualified</TableHead>
                       <TableHead className="w-[110px]">City</TableHead>
                       <TableHead className="w-[130px]">Property</TableHead>
                       <TableHead className="w-[180px]">Source</TableHead>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
 import { logBulkLeadChanges } from "@/lib/lead-activity-log";
-import { eventNameForStatus, sendLeadCrmEvent } from "@/lib/meta-capi";
+import { eventNameForStatus, eventNameForQualification, sendLeadCrmEvent } from "@/lib/meta-capi";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -18,6 +18,7 @@ export async function PATCH(req: NextRequest) {
 
     const updateData: Record<string, unknown> = {};
     if (data.status) updateData.status = data.status;
+    if (data.qualification) updateData.qualification = data.qualification;
     if (data.temperature !== undefined) updateData.temperature = data.temperature;
     if (data.activeStatus) updateData.activeStatus = data.activeStatus;
     // Only ADMIN can bulk-reassign leads
@@ -47,9 +48,14 @@ export async function PATCH(req: NextRequest) {
 
       // Meta lead-quality feedback for Meta-sourced leads in this batch.
       // Fire-and-forget; failures are logged and never block the response.
-      if (typeof data.status === "string" && eventNameForStatus(data.status)) {
+      const statusEventName = typeof data.status === "string" ? eventNameForStatus(data.status) : null;
+      const qualificationEventName =
+        typeof data.qualification === "string" ? eventNameForQualification(data.qualification) : null;
+      if (statusEventName || qualificationEventName) {
         for (const l of updatedLeads as { id: string; leadgenId: string | null }[]) {
-          if (l.leadgenId) void sendLeadCrmEvent({ leadgenId: l.leadgenId, status: data.status });
+          if (!l.leadgenId) continue;
+          if (statusEventName) void sendLeadCrmEvent({ leadgenId: l.leadgenId, eventName: statusEventName });
+          if (qualificationEventName) void sendLeadCrmEvent({ leadgenId: l.leadgenId, eventName: qualificationEventName });
         }
       }
     }

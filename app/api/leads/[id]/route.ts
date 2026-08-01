@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuthWithRole } from "@/lib/api-auth";
 import { logLeadFieldChanges } from "@/lib/lead-activity-log";
-import { sendLeadCrmEvent } from "@/lib/meta-capi";
+import { eventNameForStatus, eventNameForQualification, sendLeadCrmEvent } from "@/lib/meta-capi";
 import { normalizeIndianPhone } from "@/lib/phone";
 
 const TRACKED_FIELDS = [
@@ -12,6 +12,7 @@ const TRACKED_FIELDS = [
   "city",
   "state",
   "status",
+  "qualification",
   "temperature",
   "activeStatus",
   "assignedTo",
@@ -91,6 +92,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(body.city !== undefined && { city: body.city }),
       ...(body.state !== undefined && { state: body.state }),
       ...(body.status && { status: body.status }),
+      ...(body.qualification && { qualification: body.qualification }),
       ...(body.temperature !== undefined && { temperature: body.temperature }),
       ...(body.activeStatus && { activeStatus: body.activeStatus }),
       ...(role === "ADMIN" && body.assignedTo !== undefined && { assignedTo: body.assignedTo || null }),
@@ -120,10 +122,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       fields: [...TRACKED_FIELDS],
     });
 
-    // Meta lead-quality feedback: when a Meta-sourced lead changes status, tell
-    // Meta whether it was qualified or junk. Fire-and-forget; never blocks save.
-    if (existing.leadgenId && lead.status !== existing.status) {
-      void sendLeadCrmEvent({ leadgenId: existing.leadgenId, status: lead.status });
+    // Meta lead-quality feedback, fire-and-forget; never blocks save.
+    // - status: only CLOSED_WON is reported (→ "Converted").
+    // - qualification: the manual QUALIFIED/NOT_QUALIFIED call (→ "Qualified"/
+    //   "Disqualified") — independent of pipeline stage, so a genuine lead
+    //   still sends a positive signal even if it never reaches a meeting.
+    if (existing.leadgenId) {
+      if (lead.status !== existing.status) {
+        void sendLeadCrmEvent({ leadgenId: existing.leadgenId, eventName: eventNameForStatus(lead.status) });
+      }
+      if (lead.qualification !== existing.qualification) {
+        void sendLeadCrmEvent({
+          leadgenId: existing.leadgenId,
+          eventName: eventNameForQualification(lead.qualification),
+        });
+      }
     }
 
     return NextResponse.json({ success: true, data: lead });
