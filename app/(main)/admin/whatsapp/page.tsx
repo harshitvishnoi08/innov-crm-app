@@ -40,7 +40,13 @@ type MetaTemplate = {
 const PRAYAGRAJ_VIDEO_ID = '860392389677081';
 const KW_SEP = '||';
 
-type FacebookForm = { id: string; name: string; status: string; pageName?: string };
+type FacebookForm = { id: string; name: string; status: string; pageName?: string; label?: string };
+
+// Website enquiries (weinnovarch.com form, incl. Google Ads clicks) aren't a
+// Facebook form, but rules match them the same way — the intake route feeds
+// "website <utm_campaign>" as the keyword source, so the keyword "website"
+// catches every site lead. Pinned to the top of the source picker.
+const WEBSITE_SOURCE: FacebookForm = { id: '__website__', name: 'website', status: 'ACTIVE', label: 'Website / Google Ads leads' };
 
 const emptyForm = {
   name: '',
@@ -102,7 +108,7 @@ function FormMultiSelect({
       : selected.length === forms.length
       ? 'All forms'
       : selected.length === 1
-      ? forms.find(f => f.name.toLowerCase() === selected[0])?.name ?? selected[0]
+      ? (() => { const f = forms.find(f => f.name.toLowerCase() === selected[0]); return f ? (f.label ?? f.name) : selected[0]; })()
       : `${selected.length} forms selected`;
 
   return (
@@ -143,7 +149,7 @@ function FormMultiSelect({
                 <span className={`flex h-4 w-4 items-center justify-center rounded border shrink-0 ${checked ? 'bg-primary border-primary' : 'border-input'}`}>
                   {checked && <Check className="h-3 w-3 text-primary-foreground" />}
                 </span>
-                <span className="truncate text-left">{f.name}</span>
+                <span className={`truncate text-left${f.label ? ' font-medium' : ''}`}>{f.label ?? f.name}</span>
                 {f.status !== 'ACTIVE' && (
                   <span className="ml-auto text-[10px] text-muted-foreground shrink-0">({f.status})</span>
                 )}
@@ -162,7 +168,7 @@ function FormMultiSelect({
           <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto rounded-md border border-border/60 bg-muted/20 p-2">
             {selected.map(s => (
               <span key={s} className="inline-flex items-center gap-1 text-[11px] bg-muted px-2 py-0.5 rounded-full">
-                {forms.find(f => f.name.toLowerCase() === s)?.name ?? s}
+                {(() => { const f = forms.find(f => f.name.toLowerCase() === s); return f ? (f.label ?? f.name) : s; })()}
                 <button type="button" onClick={() => onChange(selected.filter(x => x !== s))} className="text-muted-foreground hover:text-foreground">×</button>
               </span>
             ))}
@@ -355,6 +361,7 @@ export default function WhatsAppPage() {
     staleTime: 5 * 60 * 1000,
   });
   const fbForms: FacebookForm[] = Array.isArray(fbFormsRaw) ? fbFormsRaw : [];
+  const sourceOptions: FacebookForm[] = [WEBSITE_SOURCE, ...fbForms];
 
   const { data: metaTemplatesRaw, isLoading: templatesLoading, refetch: refetchTemplates } = useQuery({
     queryKey: ['whatsapp-meta-templates'],
@@ -566,14 +573,14 @@ export default function WhatsAppPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Facebook Forms</Label>
+              <Label>Lead Sources</Label>
               <FormMultiSelect
-                forms={fbForms}
+                forms={sourceOptions}
                 selected={selectedForms}
                 onChange={handleFormsChange}
                 loading={fbFormsLoading}
               />
-              <p className="text-xs text-muted-foreground">Rule triggers when a lead comes from any selected form.</p>
+              <p className="text-xs text-muted-foreground">Rule triggers when a lead comes from any selected Facebook form or the website.</p>
             </div>
 
             <div className="space-y-1.5">
