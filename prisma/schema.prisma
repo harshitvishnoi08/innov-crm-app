@@ -152,6 +152,15 @@ model Lead {
   adsetName         String?          @map("adset_name")
   adId              String?          @map("ad_id")
   adName            String?          @map("ad_name")
+  // Website-form attribution (Google Ads click id + UTMs captured on the site)
+  gclid             String?
+  utmSource         String?          @map("utm_source")
+  utmMedium         String?          @map("utm_medium")
+  utmCampaign       String?          @map("utm_campaign")
+  utmTerm           String?          @map("utm_term")
+  utmContent        String?          @map("utm_content")
+  landingPage       String?          @map("landing_page")
+  referrer          String?
   status            LeadStatus       @default(NEW)
   qualification     LeadQualification @default(UNREVIEWED)
   temperature       LeadTemperature?
@@ -193,6 +202,7 @@ model Lead {
   @@index([activeStatus])
   @@index([adId])
   @@index([campaignId])
+  @@index([gclid])
   @@map("leads")
 }
 

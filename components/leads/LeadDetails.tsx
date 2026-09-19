@@ -416,6 +416,28 @@ export function LeadDetail({ id }: { id: string }) {
                     <p className="text-xs text-muted-foreground">Remarks / Initial Notes</p>
                     <p className="text-sm">{(lead.initialNotes as string) || '—'}</p>
                   </div>
+                  {/* Website/Google Ads attribution — only present on leads that came via the site form */}
+                  {(lead.gclid || lead.utmSource || lead.landingPage) && (
+                    <div className="col-span-full space-y-2 rounded-md border bg-muted/30 p-3">
+                      <p className="text-xs font-medium text-muted-foreground">Website Attribution</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {[
+                          { label: 'UTM Source / Medium', value: [lead.utmSource, lead.utmMedium].filter(Boolean).join(' / ') },
+                          { label: 'UTM Campaign', value: lead.utmCampaign as string },
+                          { label: 'Keyword (utm_term)', value: lead.utmTerm as string },
+                          { label: 'Ad (utm_content)', value: lead.utmContent as string },
+                          { label: 'Google Click ID', value: lead.gclid as string },
+                          { label: 'Landing Page', value: lead.landingPage as string },
+                          { label: 'Referrer', value: lead.referrer as string },
+                        ].map(({ label, value }) => (
+                          <div key={label} className="space-y-0.5 min-w-0">
+                            <p className="text-xs text-muted-foreground">{label}</p>
+                            <p className="text-sm font-medium break-all">{value || '—'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>
