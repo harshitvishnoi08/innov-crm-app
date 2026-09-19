@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendNewLeadNotification } from "@/lib/mailer";
 import { runNewLeadAutomations } from "@/lib/lead-automations";
@@ -132,20 +132,25 @@ export async function POST(req: NextRequest) {
                 content: `Lead created from ${formData.name || "Meta Ads"} (${platform})`,
               });
 
-              void sendNewLeadNotification({
-                id: newLead.id,
-                customerName: newLead.customerName,
-                contactNumber: newLead.contactNumber ?? "",
-                city: newLead.city,
-                platform: newLead.platform,
-                leadSource: newLead.leadSource,
-                propertyType: newLead.propertyType,
-                status: newLead.status,
-                assignedUser: null,
+              // after() keeps the Vercel function alive until these finish — a
+              // bare `void promise` can be frozen once the response is sent.
+              after(async () => {
+                await Promise.all([
+                  sendNewLeadNotification({
+                    id: newLead.id,
+                    customerName: newLead.customerName,
+                    contactNumber: newLead.contactNumber ?? "",
+                    city: newLead.city,
+                    platform: newLead.platform,
+                    leadSource: newLead.leadSource,
+                    propertyType: newLead.propertyType,
+                    status: newLead.status,
+                    assignedUser: null,
+                  }),
+                  // Auto-send WhatsApp templates (shared with the website intake route)
+                  runNewLeadAutomations(newLead, formData.name || ''),
+                ]);
               });
-
-              // Auto-send WhatsApp templates (shared with the website intake route)
-              void runNewLeadAutomations(newLead, formData.name || '');
             }
           }
         }

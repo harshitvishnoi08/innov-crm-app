@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendNewLeadNotification } from "@/lib/mailer";
 import { ActivityType, logLeadActivity } from "@/lib/lead-activity-log";
@@ -111,21 +111,26 @@ export async function POST(req: NextRequest) {
       }`,
     });
 
-    void sendNewLeadNotification({
-      id: newLead.id,
-      customerName: newLead.customerName,
-      contactNumber: newLead.contactNumber ?? "",
-      city: newLead.city,
-      platform: newLead.platform,
-      leadSource: newLead.leadSource,
-      propertyType: newLead.propertyType,
-      status: newLead.status,
-      assignedUser: null,
+    // after() keeps the Vercel function alive until these finish — a bare
+    // `void promise` can be frozen the moment the response is sent.
+    after(async () => {
+      await Promise.all([
+        sendNewLeadNotification({
+          id: newLead.id,
+          customerName: newLead.customerName,
+          contactNumber: newLead.contactNumber ?? "",
+          city: newLead.city,
+          platform: newLead.platform,
+          leadSource: newLead.leadSource,
+          propertyType: newLead.propertyType,
+          status: newLead.status,
+          assignedUser: null,
+        }),
+        // Rules keyed on "website" fire for every site lead; a rule keyed on a
+        // campaign name only fires for that campaign.
+        runNewLeadAutomations(newLead, `website ${utmCampaign ?? ""}`),
+      ]);
     });
-
-    // Rules keyed on "website" fire for every site lead; a rule keyed on a
-    // campaign name only fires for that campaign.
-    void runNewLeadAutomations(newLead, `website ${utmCampaign ?? ""}`);
 
     return NextResponse.json({ success: true, leadId: newLead.id });
   } catch (error) {
