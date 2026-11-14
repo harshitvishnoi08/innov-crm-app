@@ -13,9 +13,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { role, response } = await requireAuthWithRole();
+  const { response } = await requireAuthWithRole();
   if (response) return response;
-  if (role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
   const { name, formKeyword, templateName, language, videoId, notifyNumber, isActive } = body;

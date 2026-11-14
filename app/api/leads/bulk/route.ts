@@ -16,6 +16,10 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "ids and data are required" }, { status: 400 });
     }
 
+    if (role !== "ADMIN" && data.assignedTo !== undefined) {
+      return NextResponse.json({ error: "Only admins can assign leads" }, { status: 403 });
+    }
+
     const updateData: Record<string, unknown> = {};
     if (data.status) updateData.status = data.status;
     if (data.qualification) updateData.qualification = data.qualification;
@@ -28,10 +32,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
     }
 
-    // USER can only update leads assigned to them
-    const where = role === "USER"
-      ? { id: { in: ids }, assignedTo: user.id }
-      : { id: { in: ids } };
+    const where = { id: { in: ids } };
 
     const result = await prisma.lead.updateMany({ where, data: updateData });
 

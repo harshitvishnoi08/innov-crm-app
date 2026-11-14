@@ -8,7 +8,7 @@ import { normalizeIndianPhone } from "@/lib/phone";
 // GET leads with full server-side filtering + pagination
 export async function GET(req: NextRequest) {
   try {
-    const { user, role, response } = await requireAuthWithRole();
+    const { user, response } = await requireAuthWithRole();
     if (!user) return response!;
 
     const { searchParams } = new URL(req.url);
@@ -58,10 +58,7 @@ export async function GET(req: NextRequest) {
       ...(activeStatus && { activeStatus: activeStatus as never }),
       ...(platform     && { platform }),
       ...(leadSource   && { leadSource }),
-      // USER role: always restrict to their own assigned leads, ignoring any assignedTo filter
-      ...(role === "USER"
-        ? { assignedTo: user.id }
-        : assignedTo === "UNASSIGNED" ? { assignedTo: null } : assignedTo ? { assignedTo } : {}),
+      ...(assignedTo === "UNASSIGNED" ? { assignedTo: null } : assignedTo ? { assignedTo } : {}),
       ...(dateCreated === "today" && { createdAt: { gte: todayStartUTC, lt: todayEndUTC } }),
       ...(dateCreated === "week"  && { createdAt: { gte: weekStartUTC } }),
       ...(dateCreated === "month" && { createdAt: { gte: monthStartUTC } }),
@@ -100,10 +97,14 @@ export async function GET(req: NextRequest) {
 // POST create a new lead
 export async function POST(req: NextRequest) {
   try {
-    const { user, response } = await requireAuthWithRole();
+    const { user, role, response } = await requireAuthWithRole();
     if (!user) return response!;
 
     const body = await req.json();
+    // Only ADMIN can assign leads
+    if (role !== "ADMIN" && body.assignedTo) {
+      return NextResponse.json({ error: "Only admins can assign leads" }, { status: 403 });
+    }
     const lead = await prisma.lead.create({
       data: {
         customerName:     body.customerName,
@@ -117,7 +118,7 @@ export async function POST(req: NextRequest) {
         status:           body.status || "NEW",
         temperature:      body.temperature,
         activeStatus:     body.activeStatus || "ACTIVE",
-        assignedTo:       body.assignedTo,
+        assignedTo:       role === "ADMIN" ? body.assignedTo : undefined,
         leadCreatedDate:  body.leadCreatedDate ? new Date(body.leadCreatedDate) : new Date(),
         followUpDate:     body.followUpDate ? new Date(body.followUpDate) : null,
         propertyType:     body.propertyType,

@@ -10,17 +10,15 @@ const updateSchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 
-async function requireAdmin() {
-  const { user, role, response } = await requireAuthWithRole();
+// Any authenticated user (admins and sales) can manage quick templates.
+async function requireUser() {
+  const { user, response } = await requireAuthWithRole();
   if (!user) return { ok: false as const, response: response! };
-  if (role !== 'ADMIN') {
-    return { ok: false as const, response: NextResponse.json({ success: false, error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 }) };
-  }
   return { ok: true as const };
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const check = await requireAdmin();
+  const check = await requireUser();
   if (!check.ok) return check.response;
 
   const { id } = await params;
@@ -39,7 +37,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const check = await requireAdmin();
+  const check = await requireUser();
   if (!check.ok) return check.response;
 
   const { id } = await params;

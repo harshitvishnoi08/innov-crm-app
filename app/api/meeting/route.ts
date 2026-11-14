@@ -9,18 +9,13 @@ function formatMeetingDate(date: Date | string) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { user, role, response } = await requireAuthWithRole();
+    const { user, response } = await requireAuthWithRole();
     if (!user) return response!;
 
     const { searchParams } = new URL(req.url);
     const leadId = searchParams.get("leadId");
 
-    // USER role: only meetings for leads assigned to them
-    const where = leadId
-      ? { leadId }
-      : role === "USER"
-        ? { lead: { assignedTo: user.id } }
-        : {};
+    const where = leadId ? { leadId } : {};
 
     const meetings = await prisma.meeting.findMany({
       where,

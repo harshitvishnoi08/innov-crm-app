@@ -28,7 +28,7 @@ const TRACKED_FIELDS = [
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    const { user, role, response } = await requireAuthWithRole();
+    const { user, response } = await requireAuthWithRole();
     if (!user) return response!;
     const lead = await prisma.lead.findUnique({
       where: { id },
@@ -53,10 +53,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
     if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
-    // USER can only view leads assigned to them
-    if (role === "USER" && lead.assignedTo !== user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
     return NextResponse.json({ success: true, data: lead });
   } catch (error) {
     console.error("GET lead error:", error);
@@ -76,14 +72,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
-    // USER can only update leads assigned to them, and cannot reassign
-    if (role === "USER") {
-      if (existing.assignedTo !== user.id) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-    }
-
     const body = await req.json();
+
+    // Any user can update any lead, but only ADMIN can assign/reassign it
+    if (role !== "ADMIN" && body.assignedTo !== undefined) {
+      return NextResponse.json({ error: "Only admins can assign leads" }, { status: 403 });
+    }
 
     const updateData: Record<string, unknown> = {
       ...(body.customerName && { customerName: body.customerName }),

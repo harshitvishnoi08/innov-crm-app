@@ -21,13 +21,10 @@ export async function GET() {
   return NextResponse.json({ success: true, data: { templates } });
 }
 
-// POST — admin only.
+// POST — any authenticated user (admins and sales can manage templates).
 export async function POST(request: Request) {
-  const { user, role, response } = await requireAuthWithRole();
+  const { user, response } = await requireAuthWithRole();
   if (!user) return response!;
-  if (role !== 'ADMIN') {
-    return NextResponse.json({ success: false, error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
-  }
 
   const parsed = templateSchema.safeParse(await request.json());
   if (!parsed.success) {

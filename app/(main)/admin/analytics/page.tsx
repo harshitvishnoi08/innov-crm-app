@@ -1,5 +1,6 @@
 import { AnalyticsOverview } from '@/components/analytics/AnalyticsOverview';
 import { Metadata } from 'next';
+import { requireAdminPage } from '@/lib/page-auth';
 
 export const metadata: Metadata = {
   title: 'Analytics',
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AnalyticsPage() {
+  await requireAdminPage();
   return (
     <div className="space-y-6 p-4 md:p-6">
       <AnalyticsOverview />

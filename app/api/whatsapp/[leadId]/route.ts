@@ -10,16 +10,9 @@ export async function GET(
 ) {
   const { leadId } = await params;
   try {
-    const { user, role, response } = await requireAuthWithRole();
+    const { user, response } = await requireAuthWithRole();
     if (!user) return response!;
 
-    // USER can only access their assigned leads
-    if (role === 'USER') {
-      const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { assignedTo: true } });
-      if (!lead || lead.assignedTo !== user.id) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    }
 
     const messages = await prisma.whatsAppMessage.findMany({
       where: { leadId },
@@ -41,7 +34,7 @@ export async function POST(
 ) {
   const { leadId } = await params;
   try {
-    const { user, role, response } = await requireAuthWithRole();
+    const { user, response } = await requireAuthWithRole();
     if (!user) return response!;
 
     const lead = await prisma.lead.findUnique({
@@ -51,9 +44,6 @@ export async function POST(
 
     if (!lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
 
-    if (role === 'USER' && lead.assignedTo !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
 
     if (!lead.contactNumber) {
       return NextResponse.json({ error: 'Lead has no contact number' }, { status: 400 });

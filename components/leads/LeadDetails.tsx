@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { WhatsAppChat } from '@/components/leads/WhatsAppChat';
 import { getActivityLabel, isSystemActivity } from '@/components/leads/activity-labels';
 import { FetchLeadError } from '@/services/leads.service';
+import { useAuth } from '@/contexts/AuthContext';
 
 function formatDate(value: string | null | undefined) {
   if (!value) return '—';
@@ -49,6 +50,8 @@ type AppUser = { id: string; name: string; email: string };
 
 export function LeadDetail({ id }: { id: string }) {
   const router = useRouter();
+  const authUser = useAuth();
+  const isAdmin = authUser?.role === 'ADMIN';
   // Go back to the exact previous list view (preserving its filters/page/scroll
   // stored in the URL). Falls back to the bare leads page when the lead was
   // opened via a direct link / refresh with no in-app history to return to.
@@ -512,19 +515,25 @@ export function LeadDetail({ id }: { id: string }) {
             <CardContent className="space-y-4">
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Primary Assignee</Label>
-                <Select
-                  value={(lead.assignedTo as string) || ''}
-                  onValueChange={v => updateLead.mutate({ assignedTo: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select primary assignee" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allUsers.map(u => (
-                      <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isAdmin ? (
+                  <Select
+                    value={(lead.assignedTo as string) || ''}
+                    onValueChange={v => updateLead.mutate({ assignedTo: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select primary assignee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allUsers.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-sm">
+                    {(lead.assignedUser as { name?: string } | null)?.name ?? 'Unassigned'}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Collaborators</Label>

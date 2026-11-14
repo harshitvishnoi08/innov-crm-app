@@ -6,7 +6,7 @@ import { sendCollaboratorAddedWhatsApp } from "@/lib/lead-collaborator-notificat
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { user, role, response } = await requireAuthWithRole();
+    const { user, response } = await requireAuthWithRole();
     if (!user) return response!;
 
     const { id: leadId } = await params;
@@ -26,9 +26,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
     if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
-    if (role === "USER" && lead.assignedTo !== user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
 
     const [member, adder] = await Promise.all([
       prisma.user.findUnique({
@@ -73,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { user, role, response } = await requireAuthWithRole();
+    const { user, response } = await requireAuthWithRole();
     if (!user) return response!;
 
     const { id: leadId } = await params;
@@ -88,9 +85,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       select: { assignedTo: true },
     });
     if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
-    if (role === "USER" && lead.assignedTo !== user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
 
     const member = await prisma.user.findUnique({
       where: { id: body.userId },

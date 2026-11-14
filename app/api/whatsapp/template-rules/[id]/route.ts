@@ -3,9 +3,8 @@ import prisma from '@/lib/prisma';
 import { requireAuthWithRole } from '@/lib/api-auth';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { role, response } = await requireAuthWithRole();
+  const { response } = await requireAuthWithRole();
   if (response) return response;
-  if (role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { id } = await params;
   const body = await req.json();
@@ -27,9 +26,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { role, response } = await requireAuthWithRole();
+  const { response } = await requireAuthWithRole();
   if (response) return response;
-  if (role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { id } = await params;
   await prisma.whatsAppTemplateRule.delete({ where: { id } });

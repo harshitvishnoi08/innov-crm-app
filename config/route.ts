@@ -34,7 +34,17 @@ export function getCurrentAppConfig(user: unknown) {
       url: "/meetings",
       icon: Calendar,
     },
-    // Admin-only items
+    {
+      title: "WhatsApp",
+      url: "/whatsapp",
+      icon: MessageCircle,
+    },
+    {
+      title: "Message Templates",
+      url: "/whatsapp-templates",
+      icon: MessageSquareText,
+    },
+    // Admin-only items (management & marketing). Sales users (role USER) don't see these.
     ...(isAdmin ? [
       {
         title: "Analytics",
@@ -45,16 +55,6 @@ export function getCurrentAppConfig(user: unknown) {
         title: "Users",
         url: "/users",
         icon: Users,
-      },
-      {
-        title: "WhatsApp",
-        url: "/whatsapp",
-        icon: MessageCircle,
-      },
-      {
-        title: "Message Templates",
-        url: "/whatsapp-templates",
-        icon: MessageSquareText,
       },
       {
         title: "Settings",
